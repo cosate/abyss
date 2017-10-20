@@ -1,0 +1,13 @@
+{
+	"port" : 8000,
+
+	"daemon" : false,
+
+	"worker" : 4,
+
+	"timeout" : 20,
+
+	"src_root" : "www",
+
+	"err_root" : "err"
+}

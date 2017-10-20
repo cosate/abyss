@@ -1,0 +1,14 @@
+*
+
+!.gitignore
+!Makefile
+!README.md
+!/err/
+!/log/
+!/src/
+!/test/
+!/www/
+!*.cpp
+!*.h
+!*.html
+!*.json
