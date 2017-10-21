@@ -45,4 +45,5 @@ public:
 	map<string, string> header;
 	string body;
 };
+
 #endif

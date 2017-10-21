@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
 	
 	for(res_save = res; res != NULL; res = res->ai_next)
 	{
-		//inet_ntop(AF_INET, &(((struct sockaddr_in *)(res->ai_addr))->sin_addr), ips, 16);
+		inet_ntop(AF_INET, &(((struct sockaddr_in *)(res->ai_addr))->sin_addr), ips, 16);
+		printf("%s\n", ips);
 		printf("%d\n", ntohs(((struct sockaddr_in *)(res->ai_addr))->sin_port));
 	}
 
