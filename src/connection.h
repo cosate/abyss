@@ -28,13 +28,22 @@ public:
 	Response response;
 	char send_buf[BUFFERSIZE];
 	char recv_buf[BUFFERSIZE];
-	Connection():connfd(0)
+	Connection()
 	{
+		connfd = 0;
 		event.events = 0;
 		event.data.ptr = new EventData();
 		active_time = 0;
-		memset();
+		request = Request();
+		response = Response();
+		memset(send_buf, 0, BUFFERSIZE);
+		memset(recv_buf, 0, BUFFERSIZE);
 	}
 };
+
+int accept_connection(void*);
+int close_connection(void*);
+int recv_request(void*);
+int send_response(void*);
 
 #endif

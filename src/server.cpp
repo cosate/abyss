@@ -9,19 +9,22 @@
 #include<sys/epoll.h>
 
 #include<vector>
-#include<algorithm>
 
+#include"config.h"
+#include"net.h"
 #include"config.h"
 #include"connection.h"
 
 using namespace std;
 
-vector<Connection*>;
+vector<Connection*> connections;
+Config config;
 int epfd;
 
 int main()
 {
 	epfd = epoll_create1(0);
 	
+	int listen_fd = creat_listen_socket(NULL, config.port, 1024);
 	return 0;
 }

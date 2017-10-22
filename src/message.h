@@ -17,6 +17,12 @@ public:
 	string path;
 	string extension;
 	string query;
+	Url()
+	{
+		scheme = "";
+		host = "";
+
+	}
 };
 
 class Version
@@ -24,6 +30,7 @@ class Version
 public:
 	int major;
 	int minor;
+	Version() : major(0), minor(0) {}
 };
 
 class Request

@@ -18,6 +18,6 @@
 		} \
 	}while(0)
 
-void abyss_log(const char* format, ...);
+void abyss_log(const char* fmt, ...);
 
 #endif
