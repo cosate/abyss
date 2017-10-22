@@ -12,3 +12,5 @@
 !*.h
 !*.html
 !*.json
+!*.log
+!*.pid
