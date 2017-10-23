@@ -10,17 +10,56 @@
 #include"net.h"
 #include"util.h"
 
+int set_nonblock(int fd)
+{
+	int flag = fcntl(fd, F_GETFL);
+	if(flag == -1)
+	{
+		ABYSS_ERR_MSG(strerror(errno));
+		return ABYSS_ERR;
+	}
+	flag |= O_NONBLOCK;
+	if(fcntl(fd, F_SETFL, flag) == -1)
+	{
+		ABYSS_ERR_MSG(strerror(errno));
+		return ABYSS_ERR;
+	}
+	return ABYSS_OK;
+}
+
+int set_tcp_cork(int fd)
+{
+	int on = 1;
+	if(setsockopt(fd, IPPROTO_TCP, TCP_CORK, &on, sizeof(on)) == -1)
+	{
+		ABYSS_ERR_MSG(strerror(errno));
+		return ABYSS_ERR;
+	}
+	return ABYSS_OK;
+}
+
+int reset_tcp_cork(int fd)
+{
+	int off = 0;
+	if(setsockopt(fd, IPPROTO_TCP, TCP_CORK, &off, sizeof(off)) == -1)
+	{
+		ABYSS_ERR_MSG(strerror(errno));
+		return ABYSS_ERR
+	}
+	return ABYSS_OK;
+}
+
 static int set_reuseport(int sockfd)
 {
 	int on = 1;
-	int ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on));
-	if(ret == -1)
+	if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) == -1)
 	{
 		ABYSS_ERR_MSG(strerr(errno));
 		return ABYSS_ERR;
 	}
 	return ABYSS_OK;
 }
+
 int create_listen_socket(const char* host, int port, int backlog)
 {
 	int listen_fd;
@@ -67,9 +106,7 @@ int create_listen_socket(const char* host, int port, int backlog)
 
 			break;
 		}
-
 		freeaddrinfo(results_save);
-
 		return results == NULL ? ABYSS_ERR : listen_fd;
 	}
 }

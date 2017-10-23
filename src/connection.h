@@ -6,6 +6,8 @@
 #include"message.h"
 
 #define BUFFERSIZE (4096)
+#define MAX_CONNECTIONS (10000)
+#define MAX_EVENTs (10000)
 
 typedef int (*handler)(void*);
 
@@ -39,7 +41,14 @@ public:
 		memset(send_buf, 0, BUFFERSIZE);
 		memset(recv_buf, 0, BUFFERSIZE);
 	}
+
+	~Connection()
+	{
+		delete event.data.ptr;
+	}
 };
+
+bool cmp(Connection*, Connection*);
 
 int accept_connection(void*);
 int close_connection(void*);
