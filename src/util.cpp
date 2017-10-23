@@ -4,7 +4,6 @@
 #include<unistd.h>
 #include"util.h"
 
-
 void abyss_log(const char* fmt, ...)
 {
 	FILE *log_file = fopen("log/Abyss.log", "a+");
