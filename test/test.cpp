@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
 	epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd, &listen_event);
 
 	epoll_event results[1024];
+	char buff[4096];
 
 	for(;;)
 	{
@@ -59,7 +60,8 @@ int main(int argc, char* argv[])
 		for(int i = 0; i < nfds; i++)
 		{
 			int res = results[i].data.fd;
-			cout<<"res "<<res<<endl;
+			int connfd = accept(res, NULL, NULL);
+			cout<<"res "<<res<<"conn "<<connfd<<endl;
 		}
 	}
 	return 0;
