@@ -42,8 +42,8 @@ int accept_connection(void* listen_fd)
 		c->connfd = connfd;
 		c->event.events = EPOLLIN;
 		c->event.data.ptr->ptr = c;
-		c->event.data.ptr->in_handler = recv_request;
-		c->event.data.ptr->out_handler = send_response;
+		c->event.data.ptr->in_handler = handle_request;
+		c->event.data.ptr->out_handler = handle_response;
 		if(epoll_ctl(epfd, EPOLL_CTL_ADD, connfd, &c->event) == ABYSS_ERR)
 		{
 			close(connfd);
@@ -63,15 +63,26 @@ int accept_connection(void* listen_fd)
 	return ABYSS_OK;
 }
 
-int close_connection(void* connection)
+int handle_request(void* connection)
+{
+	Connection* c = connection;
+	recv_request(c);
+}
+
+int handle_response(void* connection)
 {
 	Connection* c = connection;
 	
 }
 
-int recv_request(void* connection)
+static int close_connection(void* connection)
 {
 	Connection* c = connection;
+	
+}
+
+static int recv_request(Connection* c)
+{
 	while(1)
 	{
 		ssize_t bytes = recv(c->connfd, c->recv_buffer + c->buffer_length, BUFFER_SIZE - c->buffer_length, 0);
@@ -90,9 +101,11 @@ int recv_request(void* connection)
 			if(BUFFER_SIZE == c->buffer_length)
 				return ABYSS_OK;
 		}
+	}
+
 }
 
-int send_response(void* connection)
+static int send_response(Connection* c)
 {
-	Connection* c = connection;
+	
 }

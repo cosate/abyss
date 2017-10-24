@@ -54,7 +54,7 @@ bool cmp(Connection*, Connection*);
 
 int accept_connection(void*);
 int close_connection(void*);
-int recv_request(void*);
-int send_response(void*);
+int handle_request(void*);
+int handle_response(void*);
 
 #endif
