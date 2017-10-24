@@ -3,6 +3,7 @@
 #include<sys/socket.h>
 #include<stdlib.h>
 #include<sys/sendfile.h>
+#include<sys/types.h>
 #include<errno.h>
 
 #include<vector>
@@ -66,4 +67,32 @@ int close_connection(void* connection)
 {
 	Connection* c = connection;
 	
+}
+
+int recv_request(void* connection)
+{
+	Connection* c = connection;
+	while(1)
+	{
+		ssize_t bytes = recv(c->connfd, c->recv_buffer + c->buffer_length, BUFFER_SIZE - c->buffer_length, 0);
+		if(bytes == 0)
+			return ABYSS_ERR;
+		else if(bytes == -1)
+		{
+			if(errno == EAGAIN || errno == EWOULDBLOCK)
+				return ABYSS_OK;
+			else
+				return ABYSS_ERR;
+		}
+		else
+		{
+			c->buffer_length += bytes;
+			if(BUFFER_SIZE == c->buffer_length)
+				return ABYSS_OK;
+		}
+}
+
+int send_response(void* connection)
+{
+	Connection* c = connection;
 }

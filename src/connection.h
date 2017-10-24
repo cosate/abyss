@@ -5,7 +5,7 @@
 #include<sys/types.h>
 #include"message.h"
 
-#define BUFFERSIZE (4096)
+#define BUFFER_SIZE (4096)
 #define MAX_CONNECTIONS (10000)
 #define MAX_EVENTs (10000)
 
@@ -28,8 +28,9 @@ public:
 	time_t active_time;
 	Request request;
 	Response response;
-	char send_buf[BUFFERSIZE];
-	char recv_buf[BUFFERSIZE];
+	char send_buffer[BUFFERSIZE];
+	char recv_buffer[BUFFERSIZE];
+	int buffer_length;
 	Connection()
 	{
 		connfd = 0;
@@ -38,8 +39,9 @@ public:
 		active_time = 0;
 		request = Request();
 		response = Response();
-		memset(send_buf, 0, BUFFERSIZE);
-		memset(recv_buf, 0, BUFFERSIZE);
+		memset(send_buffer, 0, BUFFERSIZE);
+		memset(recv_buffer, 0, BUFFERSIZE);
+		buffer_length = 0;
 	}
 
 	~Connection()

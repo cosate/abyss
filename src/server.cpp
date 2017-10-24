@@ -25,14 +25,14 @@ int epfd;
 void server_init()
 {
 	load_config(config, "config.json");
+	make_heap(connections.begin(), connections.end(), cmp);
+	epfd = epoll_create1(0);
 }
 
 
 int main(int argc, char* argv[])
 {
 	server_init();
-	make_heap(connections.begin(), connections.end(), cmp);
-	epfd = epoll_create1(0);
 	
 	int listen_fd = creat_listen_socket(NULL, config.port, 1024);
 	if(listen_fd == ABYSS_ERR)
@@ -61,8 +61,14 @@ int main(int argc, char* argv[])
 		int nfds = epoll_wait(epfd, res, MAX_EVENTS, 500);
 		for(int i = 0; i < nfds; i++)
 		{
-			epoll_event ev = res[i];
-			if(ev->evets & EPOLLIN)
+			if(res[i].events & EPOLLIN)
+			{
+				res[i].data.ptr->in_handler(res[i].data.ptr->ptr);
+			}
+			if(res[i].events & EPOLLOUT)
+			{
+				res[i].data.ptr->out_handler(res[i].data.ptr->ptr);
+			}
 		}
 	}
 	return 0;

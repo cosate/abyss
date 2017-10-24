@@ -53,4 +53,6 @@ public:
 	string body;
 };
 
+int parse_request(char*);
+
 #endif

@@ -49,10 +49,10 @@ int reset_tcp_cork(int fd)
 	return ABYSS_OK;
 }
 
-static int set_reuseport(int sockfd)
+static int set_reuseport(int fd)
 {
 	int on = 1;
-	if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) == -1)
+	if(setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) == -1)
 	{
 		ABYSS_ERR_MSG(strerr(errno));
 		return ABYSS_ERR;
