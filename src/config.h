@@ -17,6 +17,6 @@ public:
 	Config() : port(0), daemon(false), worker(0), timeout(0), src_root(0), err_root(0) {}
 };
 
-int load_config(Config&, string);
+int load_config(Config&, const char*);
 
 #endif

@@ -5,6 +5,7 @@
 #include<sys/sendfile.h>
 #include<sys/types.h>
 #include<errno.h>
+#include<cstring>
 
 #include<vector>
 #include<algorithm>

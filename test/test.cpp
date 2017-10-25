@@ -57,11 +57,25 @@ int main(int argc, char* argv[])
 	for(;;)
 	{
 		int nfds = epoll_wait(epfd, results, 1024, 500);
+		cout<<"loop"<<endl;
 		for(int i = 0; i < nfds; i++)
 		{
 			int res = results[i].data.fd;
-			int connfd = accept(res, NULL, NULL);
-			cout<<"res "<<res<<"conn "<<connfd<<endl;
+			if(res == listen_fd)
+			{
+				cout<<"listen"<<endl;
+				int connfd = accept(res, NULL, NULL);
+				epoll_event bew;
+				bew.events = EPOLLIN;
+				bew.data.fd = connfd;
+				epoll_ctl(epfd, EPOLL_CTL_ADD, connfd, &bew);
+			}
+			else
+			{
+				cout<<"res "<<res<<endl;
+				recv(res, buff, 4096, 0);
+				cout<<buff<<endl;
+			}
 		}
 	}
 	return 0;

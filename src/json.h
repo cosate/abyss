@@ -214,6 +214,19 @@ namespace gao
 		}
 
 		//操作
+		bool hasKey(string key)
+		{
+			if(type != Type::JSON_OBJECT)
+				return false;
+			else
+			{
+				if((data.dict)->count(key) == 0)
+					return false;
+				else
+					return true;
+			}
+		}
+		
 		JsonValue& operator[](string s)
 		{
 			setType(Type::JSON_OBJECT);
