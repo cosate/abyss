@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
 	epoll_event results[1024];
 	char buff[4096];
 
+	cout<<sysconf(_SC_NPROCESSORS_ONLN)<<endl<<endl<<endl;
 	for(;;)
 	{
 		int nfds = epoll_wait(epfd, results, 1024, 500);
