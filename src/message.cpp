@@ -49,3 +49,31 @@ static init_code_description()
 	code2description[505] = "505 HTTP Version Not Supported";
 }
 
+int parse_request(Request& req, char* buffer)
+{
+	char* line_begin = buffer;
+	char* line_end = buffer;
+
+	parse_line(line_begin, line_end);
+	parse_request_line(line_begin, line_end);
+
+	while(parse_line(line_begin, line_end) && !(line_begin + 2 == line_end))
+	{
+		parse_header()
+	}
+
+	parse_line(line_begin, line_end);
+	parse_body(line_begin, line_end);
+}
+
+int parse_line(char* & begin, char* & end)
+{
+	char* p = begin;
+	while(p != '/r')
+	{
+		p++;
+	}
+}
+int parse_request_line(char* begin, char* end);
+int parse_header(char* begin, char* end);
+int parse_body(char* begin, char* end);

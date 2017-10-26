@@ -20,6 +20,8 @@ public:
 	EventData():ptr(NULL), in_handler(NULL), out_handler(NULL){}
 };
 
+
+
 class Connection
 {
 public:

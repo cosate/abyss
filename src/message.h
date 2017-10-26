@@ -21,7 +21,10 @@ public:
 	{
 		scheme = "";
 		host = "";
-
+		port = "";
+		path = "";
+		extension = "";
+		query = "";
 	}
 };
 
@@ -30,8 +33,10 @@ class Version
 public:
 	int major;
 	int minor;
-	Version() : major(0), minor(0) {}
+	Version() : major(1), minor(0) {}
 };
+
+enum class Status {UNPARSED = 0, PARSE_REQUEST_LINE, PARSE_HEADER, PARSE_BODY};
 
 class Request
 {
@@ -41,18 +46,34 @@ public:
 	Version version;
 	map<string, string> header;
 	string body;
+	Status status;
+	Request()
+	{
+		method = Method::GET;
+		url = Url();
+		version = Version();
+		body = "";
+		status = Status::UNPARSED;
+	}
 };
 
 class Response
 {
 public:
 	Version version;
-	int statue_code;
+	int status_code;
 	string code_description;
 	map<string, string> header;
 	string body;
+	Response()
+	{
+		version = Version();
+		status_code = 200;
+		code_description = "200 OK";
+		body = "";
+	}
 };
 
-int parse_request(char*);
+int parse_request(Request&, char*);
 
 #endif
