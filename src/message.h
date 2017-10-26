@@ -1,9 +1,10 @@
 #ifndef ABYSS_REQUEST_H
 #define ABYSS_REQUEST_H
 
-#include<iostream>
 #include<string>
 #include<map>
+
+#include"connection.h"
 using namespace std;
 
 enum class Method {GET = 0, PUT, HEAD, POST, TRACE, DELETE, CONNECT, OPTIONS};
@@ -74,6 +75,6 @@ public:
 	}
 };
 
-int parse_request(Request&, char*);
+int parse_request(Connection&);
 
 #endif

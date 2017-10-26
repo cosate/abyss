@@ -49,10 +49,10 @@ static init_code_description()
 	code2description[505] = "505 HTTP Version Not Supported";
 }
 
-int parse_request(Request& req, char* buffer)
+int parse_request(Connection& connection)
 {
-	char* line_begin = buffer;
-	char* line_end = buffer;
+	char* line_begin = connection.recv_buffer;
+	char* line_end = connection.recv_buffer;
 
 	parse_line(line_begin, line_end);
 	parse_request_line(line_begin, line_end);
