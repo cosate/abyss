@@ -1,7 +1,6 @@
 #ifndef ABYSS_CONNECTION_H
 #define ABYSS_CONNECTION_H
 
-#include<sys/epoll.h>
 #include<sys/types.h>
 #include"message.h"
 
@@ -9,54 +8,49 @@
 #define MAX_CONNECTIONS (10000)
 #define MAX_EVENTs (10000)
 
-typedef int (*handler)(void*);
-
 class EventData
 {
 public:
-	void* ptr;
-	handler in_handler;
-	handler out_handler;
-	EventData():ptr(NULL), in_handler(NULL), out_handler(NULL){}
+	int fd;
+	virtual int in_handler() = 0;
+	EventData() : fd(-1) {}
+	EventData(int f) :fd(f) {}
 };
 
-
-
-class Connection
+class ConnectionData : public EventData
 {
 public:
-	int connfd;
-	epoll_event event;
 	time_t active_time;
 	Request request;
 	Response response;
 	char send_buffer[BUFFERSIZE];
 	char recv_buffer[BUFFERSIZE];
 	int buffer_length;
-	Connection()
+	Connection() : EventData()
 	{
-		connfd = 0;
-		event.events = 0;
-		event.data.ptr = new EventData();
-		active_time = 0;
-		request = Request();
-		response = Response();
-		memset(send_buffer, 0, BUFFERSIZE);
-		memset(recv_buffer, 0, BUFFERSIZE);
-		buffer_length = 0;
+		construct();
 	}
 
-	~Connection()
+	Connection(int f) : EventData(f)
 	{
-		delete event.data.ptr;
+		construct();
 	}
+
+	int in_handler();
+	int out_handler();
+private:
+	void construct();
 };
 
-bool cmp(Connection*, Connection*);
+class ListenData : public EventData
+{
+public:
+	ListenData() : EventData() {}
+	ListenData(int f) : EventData(f) {}
 
-int accept_connection(void*);
-int close_connection(void*);
-int handle_request(void*);
-int handle_response(void*);
+	int in_handler();
+};
+
+bool cmp(EventData*, EventData*);
 
 #endif

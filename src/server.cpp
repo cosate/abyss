@@ -18,7 +18,7 @@
 
 using namespace std;
 
-vector<Connection*> connections;
+vector<ConnectionData*> connections;
 Config config;
 int epfd;
 
@@ -41,13 +41,11 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-	EventData listen_data;
-	listen_data.ptr = &listen_fd;
-	listen_data.in_handler = accept_connection;
+	EventData* listen_data = new ListenData(listen_fd);
 
 	epoll_event listen_event;
 	listen_event.events = EPOLLIN;
-	listen_event.data.ptr = &listen_data;
+	listen_event.data.ptr = listen_data;
 
 	if(epoll_ctl(epfd, EPOLL_CTL_ADD, listen_fd, &listen_event) == -1)
 	{
@@ -61,13 +59,20 @@ int main(int argc, char* argv[])
 		int nfds = epoll_wait(epfd, res, MAX_EVENTS, 500);
 		for(int i = 0; i < nfds; i++)
 		{
-			if(res[i].events & EPOLLIN)
+			if(res[i].data.ptr->fd == listen_fd)
 			{
-				res[i].data.ptr->in_handler(res[i].data.ptr->ptr);
+				res[i].data.ptr->in_handler();
 			}
-			if(res[i].events & EPOLLOUT)
+			else
 			{
-				res[i].data.ptr->out_handler(res[i].data.ptr->ptr);
+				if(res[i].events & EPOLLIN)
+				{
+					res[i].data.ptr->in_handler();
+				}
+				if(res[i].events & EPOLLOUT)
+				{
+					res[i].data.ptr->out_handler();
+				}
 			}
 		}
 	}
