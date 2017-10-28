@@ -2,6 +2,7 @@
 #define ABYSS_CONNECTION_H
 
 #include<sys/types.h>
+#include<sys/epoll.h>
 #include"message.h"
 
 #define BUFFER_SIZE (4096)
@@ -12,9 +13,10 @@ class EventData
 {
 public:
 	int fd;
+	uint32_t events;
 	virtual int in_handler() = 0;
-	EventData() : fd(-1) {}
-	EventData(int f) :fd(f) {}
+	EventData() : fd(-1), events(EPOLLIN) {}
+	EventData(int f) :fd(f), events(EPOLLIN) {}
 };
 
 class ConnectionData : public EventData
@@ -40,6 +42,11 @@ public:
 	int out_handler();
 private:
 	void construct();
+	int recv_request();
+	int enable_in();
+	int disable_in();
+	int enable_out();
+	int disable_out();
 };
 
 class ListenData : public EventData

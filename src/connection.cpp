@@ -19,11 +19,88 @@
 extern vector<EventData*> connections;
 extern int epfd;
 
-static int recv_request(Connection* c)
+bool cmp(EventData* c1, EventData* c2)
+{
+	return c1->active_time > c2->active_time;
+}
+
+int ConnectionData::enable_in()
+{
+	if(!(this->events & EPOLLIN))
+	{
+		this->events |= EPOLLIN;
+
+		epoll_event ev;
+		ev.events = this->events;
+		ev.data.ptr = (EventData*)this;
+		if(epoll_ctl(epfd, EPOLL_CTL_MOD, this->fd, &ev) == -1)
+		{
+			ABYSS_ERR_MSG(strerror(errno));
+			return ABYSS_ERR;
+		}
+	}
+	return ABYSS_OK;
+}
+
+int ConnectionData::disable_in()
+{
+	if(this->events & EPOLLIN)
+	{
+		this->events ^= EPOLLIN;
+
+		epoll_event ev;
+		ev.events = this->events;
+		ev.data.ptr = (EventData*)this;
+		if(epoll_ctl(epfd, EPOLL_CTL_MOD, this->fd, &ev) == -1)
+		{
+			ABYSS_ERR_MSG(strerror(errno));
+			return ABYSS_ERR;
+		}
+	}
+	return ABYSS_OK;
+}
+
+int ConnectionData::enable_out()
+{
+	if(!(this->events & EPOLLOUT))
+	{
+		this->events |= EPOLLOUT;
+
+		epoll_event ev;
+		ev.events = this->events;
+		ev.data.ptr = (EventData*)this;
+		if(epoll_ctl(epfd, EPOLL_CTL_MOD, this->fd, &ev) == -1)
+		{
+			ABYSS_ERR_MSG(strerror(errno));
+			return ABYSS_ERR;
+		}
+	}
+	return ABYSS_OK;
+}
+
+int ConnectionData::disable_out()
+{
+	if(this->events & EPOLLOUT)
+	{
+		this->events ^= EPOLLIN;
+
+		epoll_event ev;
+		ev.events = this->events;
+		ev.data.ptr = (EventData*)this;
+		if(epoll_ctl(epfd, EPOLL_CTL_MOD, this->fd, &ev) == -1)
+		{
+			ABYSS_ERR_MSG(strerror(errno));
+			return ABYSS_ERR;
+		}
+	}
+	return ABYSS_OK;
+}
+
+int ConnectionData::recv_request()
 {
 	while(1)
 	{
-		ssize_t bytes = recv(c->connfd, c->recv_buffer + c->buffer_length, BUFFER_SIZE - c->buffer_length, 0);
+		ssize_t bytes = recv(this->fd, this->recv_buffer + this->buffer_length, BUFFER_SIZE - this->buffer_length, 0);
 		if(bytes == 0)
 			return ABYSS_ERR;
 		else if(bytes == -1)
@@ -35,17 +112,11 @@ static int recv_request(Connection* c)
 		}
 		else
 		{
-			c->buffer_length += bytes;
+			this->buffer_length += bytes;
 			if(BUFFER_SIZE == c->buffer_length)
 				return ABYSS_OK;
 		}
 	}
-
-}
-
-bool cmp(EventData* c1, EventData* c2)
-{
-	return c1->active_time > c2->active_time;
 }
 
 void ConnectionData::construct()
@@ -59,7 +130,11 @@ void ConnectionData::construct()
 
 int ConnectionData::in_handler()
 {
-	
+	if(this->recv_request() == ABYSS_ERR)
+	{
+		return ABYSS_ERR;
+	}
+
 }
 
 int ConnectionData::out_handler()

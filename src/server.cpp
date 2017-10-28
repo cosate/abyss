@@ -18,7 +18,7 @@
 
 using namespace std;
 
-vector<ConnectionData*> connections;
+vector<EventData*> connections;
 Config config;
 int epfd;
 
