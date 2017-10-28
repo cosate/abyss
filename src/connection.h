@@ -47,6 +47,7 @@ private:
 	int disable_in();
 	int enable_out();
 	int disable_out();
+	int parse_request();
 };
 
 class ListenData : public EventData

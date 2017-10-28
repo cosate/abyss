@@ -134,7 +134,7 @@ int ConnectionData::in_handler()
 	{
 		return ABYSS_ERR;
 	}
-
+	if(parse_request() == ABYSS_ERR)
 }
 
 int ConnectionData::out_handler()
