@@ -110,16 +110,3 @@ int ConnectionData::parse_request()
 {
 	
 }
-
-void ConnectionData::active_connection()
-{
-	this->active_time = time(NULL);
-	make_heap(connections.begin(), connections.end(), cmp);
-}
-
-void ConnectionData::close_connection()
-{
-	if(this->fd != -1)
-		close(this->fd);
-
-}

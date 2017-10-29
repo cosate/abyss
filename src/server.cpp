@@ -75,13 +75,13 @@ int main(int argc, char* argv[])
 						//connections;
 						p->active_time = 0;
 						make_heap(connections.begin(), connections.end(), cmp);
-						pop_heap(connections.begin(), connections.end());
+						pop_heap(connections.begin(), connections.end(), cmp);
 						connections.pop_back();
 						delete p;
 					}
 					else
 					{
-						p->active_connection();
+						p->active_time = time(NULL);
 						make_heap(connections.begin(), connections.end(), cmp);
 					}
 				}
