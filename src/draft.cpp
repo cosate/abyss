@@ -87,7 +87,7 @@ int EventData::in_handler()
 			delete c;
 			continue;
 		}
-		c->activae_time = time(NULL);
+		c->active_time = time(NULL);
 		connections.push_back(c);
 		push_heap(connections.begin(), connections.end(), cmp);
 	}
@@ -98,4 +98,28 @@ int EventData::in_handler()
 		return ABYSS_ERR;
 	}
 	return ABYSS_OK;
+}
+
+
+
+
+
+
+
+int ConnectionData::parse_request()
+{
+	
+}
+
+void ConnectionData::active_connection()
+{
+	this->active_time = time(NULL);
+	make_heap(connections.begin(), connections.end(), cmp);
+}
+
+void ConnectionData::close_connection()
+{
+	if(this->fd != -1)
+		close(this->fd);
+
 }

@@ -24,6 +24,15 @@ bool cmp(EventData* c1, EventData* c2)
 	return c1->active_time > c2->active_time;
 }
 
+void ConnectionData::construct()
+{
+	this->request = Request();
+	this->response = Response();
+	memset(this->send_buffer, 0, BUFFERSIZE);
+	memset(this->recv_buffer, 0, BUFFERSIZE);
+	this->buffer_length = 0;
+}
+
 int ConnectionData::enable_in()
 {
 	if(!(this->events & EPOLLIN))
@@ -119,22 +128,23 @@ int ConnectionData::recv_request()
 	}
 }
 
-void ConnectionData::construct()
+int ConnectionData::parse_request()
 {
-	this->request = Request();
-	this->response = Response();
-	memset(this->send_buffer, 0, BUFFERSIZE);
-	memset(this->recv_buffer, 0, BUFFERSIZE);
-	this->buffer_length = 0;
+
 }
 
 int ConnectionData::in_handler()
 {
 	if(this->recv_request() == ABYSS_ERR)
 	{
+		//close connection
 		return ABYSS_ERR;
 	}
-	if(parse_request() == ABYSS_ERR)
+	if(parse_request() != ABYSS_ERR)
+	{
+		//active connection
+	}
+	return ABYSS_OK;
 }
 
 int ConnectionData::out_handler()
@@ -169,7 +179,7 @@ int ListenData::in_handler()
 			delete c;
 			continue;
 		}
-		c->activae_time = time(NULL);
+		c->active_time = time(NULL);
 		connections.push_back(c);
 		push_heap(connections.begin(), connections.end(), cmp);
 	}

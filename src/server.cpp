@@ -59,15 +59,31 @@ int main(int argc, char* argv[])
 		int nfds = epoll_wait(epfd, res, MAX_EVENTS, 500);
 		for(int i = 0; i < nfds; i++)
 		{
-			if(res[i].data.ptr->fd == listen_fd)
+			EventData* p = res[i].data.ptr;
+			if(p->fd == listen_fd)
 			{
-				res[i].data.ptr->in_handler();
+				p->in_handler();
 			}
 			else
 			{
 				if(res[i].events & EPOLLIN)
 				{
-					res[i].data.ptr->in_handler();
+					if(p->in_handler() == ABYSS_ERR)
+					{
+						if(p->fd != -1)
+							close(p->fd)
+						//connections;
+						p->active_time = 0;
+						make_heap(connections.begin(), connections.end(), cmp);
+						pop_heap(connections.begin(), connections.end());
+						connections.pop_back();
+						delete p;
+					}
+					else
+					{
+						p->active_connection();
+						make_heap(connections.begin(), connections.end(), cmp);
+					}
 				}
 				if(res[i].events & EPOLLOUT)
 				{

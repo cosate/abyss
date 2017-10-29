@@ -41,12 +41,20 @@ public:
 	int in_handler();
 	int out_handler();
 private:
+	struct parse_status
+	{
+		char* line_begin;
+		char* line_end;
+		char* current;
+	};
 	void construct();
-	int recv_request();
+
 	int enable_in();
 	int disable_in();
 	int enable_out();
 	int disable_out();
+
+	int recv_request();
 	int parse_request();
 };
 
