@@ -19,6 +19,26 @@ public:
 	EventData(int f) :fd(f), events(EPOLLIN) {}
 };
 
+enum class Parse_Stage
+{
+	PARSE_REQUEST_LINE = 0,
+	PARSE_METHOD,
+    PARSE_URL,
+    PARSE_URL_SCHEME,
+    PARSE_URL_HOST,
+    PARSE_URL_PORT,
+    PARSE_URL_PATH,
+    PARSE_URL_QUERY,
+    PARSE_HTTP_VERSION,
+
+    PARSE_HEADER,
+    PARSE_HEADER_NAME,
+    PARSE_HEADER_VALUE,
+
+    PARSE_BODY,
+    PARSE_DONE
+};
+
 class ConnectionData : public EventData
 {
 public:
@@ -28,6 +48,13 @@ public:
 	char send_buffer[BUFFERSIZE];
 	char recv_buffer[BUFFERSIZE];
 	int buffer_length;
+	struct parse_status
+	{
+		char* line_begin;
+		char* current;
+		Parse_Stage stage;
+	};
+
 	Connection() : EventData()
 	{
 		construct();
@@ -41,12 +68,6 @@ public:
 	int in_handler();
 	int out_handler();
 private:
-	struct parse_status
-	{
-		char* line_begin;
-		char* line_end;
-		char* current;
-	};
 	void construct();
 
 	int enable_in();

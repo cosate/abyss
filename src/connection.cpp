@@ -31,6 +31,9 @@ void ConnectionData::construct()
 	memset(this->send_buffer, 0, BUFFERSIZE);
 	memset(this->recv_buffer, 0, BUFFERSIZE);
 	this->buffer_length = 0;
+	this->parse_status.line_begin = recv_buffer;
+	this->parse_status.current = recv_request;
+	this->parse_status.stage = Parse_Stage::PARSE_REQUEST_LINE;
 }
 
 int ConnectionData::enable_in()
@@ -137,12 +140,11 @@ int ConnectionData::in_handler()
 {
 	if(this->recv_request() == ABYSS_ERR)
 	{
-		//close connection
 		return ABYSS_ERR;
 	}
-	if(parse_request() != ABYSS_ERR)
+	if(this->parse_request() != ABYSS_ERR)
 	{
-		//active connection
+		
 	}
 	return ABYSS_OK;
 }

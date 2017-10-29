@@ -71,13 +71,13 @@ int main(int argc, char* argv[])
 					if(p->in_handler() == ABYSS_ERR)
 					{
 						if(p->fd != -1)
-							close(p->fd)
-						//connections;
+							close(p->fd);
 						p->active_time = 0;
 						make_heap(connections.begin(), connections.end(), cmp);
 						pop_heap(connections.begin(), connections.end(), cmp);
 						connections.pop_back();
 						delete p;
+						memset(&res[i], 0, sizeof(res[i]));
 					}
 					else
 					{
