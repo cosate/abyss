@@ -100,8 +100,59 @@ int EventData::in_handler()
 	return ABYSS_OK;
 }
 
+#define PARSE_ERR (-1)
+#define PARSE_OK (0)
+#define PARSE_AGAIN (1)
 
+int ConnectionData::parse_line()
+{
+	switch(parse_status.stage)
+	{
+		case PARSE_REQUEST_LINE:
+		case PARSE_METHOD:
+		case PARSE_URL:
+		case PARSE_URL_SCHEME:
+		case PARSE_URL_HOST:
+		case PARSE_URL_PORT:
+		case PARSE_URL_PATH:
+		case PARSE_URL_QUERY:
+		case PARSE_HTTP_VERSION:
+		{
+			while(parse_status.current != recv_buffer + buffer_length)
+			{
+				if(*(parse_status.current) == '\r')
+				{
+					if(parse_status.current + 1 < recv_buffer + buffer_length)
+						if(*(parse_status.current + 1) == '\n')
+						{
+							parse_status.current += 2;
+							return PARSE_OK;
+						}
+						else
+						{
+							this->response.status_code = 400;
+							this->response.code_description = response.code2description[this->response.status_code];
+							return PARSE_ERR;
+						}
+					else
+						return PARSE_AGAIN;
+				}
+				parse_status.current++;
+			}
+			break;
+		}
 
+		case PARSE_HEADER:
+		case PARSE_HEADER_NAME:
+		case PARSE_HEADER_VALUE:
+		{
+			break;
+		}
+
+		default:
+			break;
+	}
+}
 
 
 

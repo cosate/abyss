@@ -3,7 +3,7 @@
 
 using namespace std;
 
-static map<int, string> code2description;
+map<int, string> Response:: code2description = map<int, string>();
 
 static init_code_description()
 {

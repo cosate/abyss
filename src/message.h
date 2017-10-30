@@ -73,8 +73,9 @@ public:
 		code_description = "200 OK";
 		body = "";
 	}
-};
 
-int parse_request(Connection&);
+	static map<int, string> code2description;
+	static init_code_description();
+};
 
 #endif
