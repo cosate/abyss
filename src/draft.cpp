@@ -106,58 +106,100 @@ int EventData::in_handler()
 
 int ConnectionData::parse_line()
 {
-	switch(parse_status.stage)
+	while(parse_status.current < recv_buffer + buffer_length)
 	{
-		case PARSE_REQUEST_LINE:
-		case PARSE_METHOD:
-		case PARSE_URL:
-		case PARSE_URL_SCHEME:
-		case PARSE_URL_HOST:
-		case PARSE_URL_PORT:
-		case PARSE_URL_PATH:
-		case PARSE_URL_QUERY:
-		case PARSE_HTTP_VERSION:
+		if(*(parse_status.current) == '\r')
 		{
-			while(parse_status.current != recv_buffer + buffer_length)
+			if(parse_status.current + 1 < recv_buffer + buffer_length)
 			{
-				if(*(parse_status.current) == '\r')
+				if(*(parse_status.current + 1) == '\n')
 				{
-					if(parse_status.current + 1 < recv_buffer + buffer_length)
-						if(*(parse_status.current + 1) == '\n')
-						{
-							parse_status.current += 2;
-							return PARSE_OK;
-						}
-						else
-						{
-							this->response.status_code = 400;
-							this->response.code_description = response.code2description[this->response.status_code];
-							return PARSE_ERR;
-						}
-					else
-						return PARSE_AGAIN;
+					parse_status.current += 2;
+					return PARSE_OK;
 				}
-				parse_status.current++;
+				else
+				{
+					this->response.status_code = 400;
+					return PARSE_ERR;
+				}
 			}
-			break;
+			else
+				return PARSE_AGAIN;
 		}
-
-		case PARSE_HEADER:
-		case PARSE_HEADER_NAME:
-		case PARSE_HEADER_VALUE:
+		else if(*(parse_status.current) == '\n')
 		{
-			break;
+			if(parse_status.stage == Parse_Stage::PARSE_REQUEST_LINE)
+			{
+				this->response.status_code = 400;
+				return PARSE_ERR;
+			}
+			else if(parse_status.stage == PARSE_HEADER)
+			{
+				if(parse_status.current + 1 < recv_buffer + buffer_length)
+				{
+					if(*(parse_status.current + 1) == '\t' || *(parse_status.current + 1) == ' ')
+					{
+						parse_status.current += 2;
+						continue;
+					}
+					else
+					{
+						this->response.status_code = 400;
+						return PARSE_ERR;
+					}
+				}
+				else
+					return PARSE_AGAIN;
+			}
 		}
+		parse_status.current++;
+	}
+	return PARSE_AGAIN;
+}
 
-		default:
-			break;
+int ConnectionData::parse_request_line()
+{
+	parse_status.stage = PARSE_METHOD;
+	for(char* p == parse_status.line_begin; p < parse_status.current; p++)
+	{
+		if(*p == ' ')
+		{
+			switch(parse_status)
+			{
+				case Parse_Stage::PARSE_METHOD:
+				{
+					parse_method(p);
+					parse_status.line_begin = ++p;
+					break;
+				}
+				case Parse_Stage::PARSE_URL:
+				{
+					parse_url(p);
+					parse_status.line_begin = ++p;
+					break;
+				}
+				case Parse_Stage::PARSE_HTTP_VERSION:
+				{
+					parse_http_version(p);
+					parse_status.line_begin = ++p;
+					break;
+				}
+			}
+		}
 	}
 }
 
-
-
-
-int ConnectionData::parse_request()
+int ConnectionData::parse_method(char* end)
 {
-	
+
+}
+
+int ConnectionData::parse_url()
+{
+
+}
+
+int ConnectionData::parse_http_version()
+{
+
 }
