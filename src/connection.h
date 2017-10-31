@@ -50,7 +50,7 @@ public:
 	int buffer_length;
 	struct parse_status
 	{
-		char* line_begin;
+		char* section_begin;
 		char* current;
 		Parse_Stage stage;
 	};

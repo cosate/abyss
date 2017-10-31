@@ -159,8 +159,10 @@ int ConnectionData::parse_line()
 
 int ConnectionData::parse_request_line()
 {
-	parse_status.stage = PARSE_METHOD;
-	for(char* p == parse_status.line_begin; p < parse_status.current; p++)
+	if(this->parse_status.stage != Parse_Stage::PARSE_REQUEST_LINE)
+		return PARSE_ERR;
+	this->parse_status.stage = PARSE_METHOD;
+	for(char* p == parse_status.section_begin; p < parse_status.current; p++)
 	{
 		if(*p == ' ')
 		{
@@ -168,20 +170,24 @@ int ConnectionData::parse_request_line()
 			{
 				case Parse_Stage::PARSE_METHOD:
 				{
-					parse_method(p);
-					parse_status.line_begin = ++p;
-					break;
+					if(parse_method(p) == PARSE_OK)
+					{
+						parse_status.section_begin = ++p;
+						break;
+					}
+					else
+						return PARSE_ERR;
 				}
 				case Parse_Stage::PARSE_URL:
 				{
 					parse_url(p);
-					parse_status.line_begin = ++p;
+					parse_status.section_begin = ++p;
 					break;
 				}
 				case Parse_Stage::PARSE_HTTP_VERSION:
 				{
 					parse_http_version(p);
-					parse_status.line_begin = ++p;
+					parse_status.section_begin = ++p;
 					break;
 				}
 			}
@@ -191,12 +197,88 @@ int ConnectionData::parse_request_line()
 
 int ConnectionData::parse_method(char* end)
 {
+	if(this->parse_status.stage != Parse_Stage::PARSE_METHOD)
+		return PARSE_ERR;
+	this->response.status_code = 400;
+	switch(end - this->parse_status.section_begin)
+	{
+		case 3:
+		{
+			if(strncmp(this->parse_status.section_begin, "GET", 3) == 0)
+			{
+				this->request.method = Method::GET;
+				break;
+			}
+			else if(strncmp(this->parse_status.section_begin, "PUT", 3) == 0)
+			{
+				this->request.method = Method::PUT;
+				break;
+			}
+			return PARSE_ERR;
+		}
 
+		case 4:
+		{
+			if(strncmp(this->parse_status.section_begin, "POST", 4) == 0)
+			{
+				this->request.method = Method::POST;
+				break;
+			}
+			else if(strncmp(this->parse_status.section_begin, "HEAD", 4) == 0)
+			{
+				this->request.method = Method::HEAD;
+				break;
+			}
+			return PARSE_ERR;
+		}
+
+		case 5:
+		{
+			if(strncmp(this->parse_status.section_begin, "TRACE", 5) == 0)
+			{
+				this->request.method = Method::TRACE;
+				break;
+			}
+			return PARSE_ERR;
+		}
+
+		case 6:
+		{
+			if(strncmp(this->parse_status.section_begin, "DELETE", 6) == 0)
+			{
+				this->request.method = Method::DELETE;
+				break;
+			}
+			return PARSE_ERR;
+		}
+
+		case 7:
+		{
+			if(strncmp(this->parse_status.section_begin, "OPTIONS", 7) == 0)
+			{
+				this->request.method = Method::OPTIONS;
+				break;
+			}
+			else if(strncmp(this->parse_status.section_begin, "CONNECT", 7) == 0)
+			{
+				this->request.method = Method::CONNECT;
+				break;
+			}
+			return PARSE_ERR;
+		}
+
+		default:
+			return PARSE_ERR;
+	}
+
+	this->response.status_code = 200;
+	this->parse_status.stage = Parse_Stage::PARSE_URL;
+	return PARSE_OK;
 }
 
 int ConnectionData::parse_url()
 {
-
+	
 }
 
 int ConnectionData::parse_http_version()

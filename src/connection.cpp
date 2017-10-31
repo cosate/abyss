@@ -31,7 +31,7 @@ void ConnectionData::construct()
 	memset(this->send_buffer, 0, BUFFERSIZE);
 	memset(this->recv_buffer, 0, BUFFERSIZE);
 	this->buffer_length = 0;
-	this->parse_status.line_begin = recv_buffer;
+	this->parse_status.section_begin = recv_buffer;
 	this->parse_status.current = recv_buffer;
 	this->parse_status.stage = Parse_Stage::PARSE_REQUEST_LINE;
 }
