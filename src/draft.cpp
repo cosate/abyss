@@ -104,6 +104,11 @@ int EventData::in_handler()
 #define PARSE_OK (0)
 #define PARSE_AGAIN (1)
 
+int parse_request()
+{
+
+}
+
 int ConnectionData::parse_line()
 {
 	while(parse_status.current < recv_buffer + buffer_length)
@@ -363,13 +368,34 @@ int ConnectionData::parse_url(char* end)
 				{
 					case 'h':
 					case 'H':
-					case '/'
+					{
+						this->parse_status.stage = Parse_Stage::PARSE_URL_SCHEME;
+						p--;
+						break;
+					}
+					case '/':
+					{
+						this->parse_status.stage = Parse_Stage::PARSE_URL_PATH;
+						p--;
+						break;
+					}
+					default:
+						return PARSE_ERR;
 				}
+				break;
 			}
 
 			case Parse_Stage::PARSE_URL_SCHEME:
 			{
+				if(strncmp(p, "http", 4) == 0 || strncmp(p, "HTTP", 4) == 0)
+				{
 
+				}
+				else
+				{
+
+				}
+				break;
 			}
 
 			case Parse_Stage::PARSE_URL_HOST:
