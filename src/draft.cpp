@@ -276,9 +276,123 @@ int ConnectionData::parse_method(char* end)
 	return PARSE_OK;
 }
 
-int ConnectionData::parse_url()
+bool ConnectionData::is_valid_scheme_char(char ch)
 {
-	
+	switch(ch)
+	{
+		case '-': /* gsm-sms view-source */
+		case '+': /* whois++ */
+		case '.': /* z39.50r z39.50s */
+			return true;
+		default:
+			if(isalnum(ch))
+				return true;
+	}
+	return false;
+}
+
+bool ConnectionData::is_valid_host_char(char ch)
+{
+	switch(ch)
+	{
+		case '-':
+		case '.':
+			return true;
+		default:
+			if(isalnum(ch))
+				return true;
+	}
+	return false;
+}
+
+/*TODO: %*/
+bool is_valid_path_char(char ch)
+{
+	switch(ch)
+	{
+		case '{':
+		case '}':
+		case '|':
+		case '\\':
+		case '^':
+		case '~':
+		case '[':
+		case ']':
+		case '\'':
+		case '<':
+		case '>':
+		case '"':
+		case ' ':
+			return false;
+		default:
+			if((ch >= 0x00 && ch <= 0x1F) || ch >= 0x7F)
+				return false;
+	}
+	return true;
+}
+
+bool ConnectionData::is_valid_query_char(char ch)
+{
+	switch(ch)
+	{
+		case '=':
+		case '&':
+		case '%':
+			return true;
+
+		default:
+			if(isalnum(ch))
+				return true;
+	}
+	return false;
+}
+
+/*General: <scheme>://<user>:<password>@<host>:<port>/<path>;<params>?<query>#<frag>*/
+/*Implement: [<http>://<host>[:<port>]][/<path>[?<query>]]*/
+int ConnectionData::parse_url(char* end)
+{
+	if(this->parse_status.stage != Parse_Stage::PARSE_URL)
+		return PARSE_ERR;
+	for(char* p = this->parse_status.section_begin; p < end; p++)
+	{
+		switch(this->parse_status.stage)
+		{
+			case Parse_Stage::PARSE_URL:
+			{
+				switch(*p)
+				{
+					case 'h':
+					case 'H':
+					case '/'
+				}
+			}
+
+			case Parse_Stage::PARSE_URL_SCHEME:
+			{
+
+			}
+
+			case Parse_Stage::PARSE_URL_HOST:
+			{
+
+			}
+
+			case Parse_Stage::PARSE_URL_PORT:
+			{
+
+			}
+
+			case Parse_Stage::PARSE_URL_PATH:
+			{
+
+			}
+
+			case Parse_Stage::PARSE_URL_QUERY:
+			{
+
+			}
+		}
+	}
 }
 
 int ConnectionData::parse_http_version()

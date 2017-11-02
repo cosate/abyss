@@ -7,6 +7,7 @@
 #include<sys/types.h>
 #include<errno.h>
 #include<cstring>
+#include<ctype.h>
 
 #include<vector>
 #include<algorithm>
