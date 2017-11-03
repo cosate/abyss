@@ -505,7 +505,35 @@ int ConnectionData::parse_url(char* end)
 
 	switch(this->parse_status.stage)
 	{
-		
+		case Parse_Stage::PARSE_URL_SCHEME:
+		{
+			return PARSE_ERR;
+		}
+		case Parse_Stage::PARSE_URL_HOST:
+		{
+			if(this->parse_status.section_begin == end)
+			{
+				return PARSE_ERR;
+			}
+			else
+			{
+				this->request.url.host.str = this->parse_status.str;
+				this->request.url.host.len = end - this->parse_status.section_begin;
+			}
+			break;
+		}
+		case Parse_Stage::PARSE_URL_PORT:
+		{
+
+		}
+		case Parse_Stage::PARSE_URL_PATH:
+		{
+
+		}
+		case Parse_Stage::PARSE_URL_QUERY:
+		{
+
+		}
 	}
 }
 
