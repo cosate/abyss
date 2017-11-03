@@ -387,20 +387,28 @@ int ConnectionData::parse_url(char* end)
 
 			case Parse_Stage::PARSE_URL_SCHEME:
 			{
-				if(strncmp(p, "http", 4) == 0 || strncmp(p, "HTTP", 4) == 0)
+				switch(*p)
 				{
+					case ':':
+					{
+						if(*(p+1) == '/' && *(p+2) )
+						this->request.url.scheme = string(&(this->parse_status.section_begin), &p);
+						this->parse_status.stage = Parse_Stage::PARSE_URL_HOST;
 
-				}
-				else
-				{
-
+					}
+					default:
+						if(!is_valid_scheme_char(*p))
+							return PARSE_ERR;
 				}
 				break;
 			}
 
 			case Parse_Stage::PARSE_URL_HOST:
 			{
+				if(is_valid_host_char(*p))
+				{
 
+				}
 			}
 
 			case Parse_Stage::PARSE_URL_PORT:

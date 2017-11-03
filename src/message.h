@@ -5,6 +5,7 @@
 #include<map>
 
 #include"connection.h"
+#include"str.h"
 using namespace std;
 
 enum class Method {GET = 0, PUT, HEAD, POST, TRACE, DELETE, CONNECT, OPTIONS};
@@ -12,20 +13,20 @@ enum class Method {GET = 0, PUT, HEAD, POST, TRACE, DELETE, CONNECT, OPTIONS};
 class Url
 {
 public:
-	string scheme;
-	string host;
-	string port;
-	string path;
-	string extension;
-	string query;
+	Str scheme;
+	Str host;
+	Str port;
+	Str path;
+	Str extension;
+	Str query;
 	Url()
 	{
-		scheme = "";
-		host = "";
-		port = "";
-		path = "";
-		extension = "";
-		query = "";
+		scheme = Str();
+		host = Str();
+		port = Str();
+		path = Str();
+		extension = Str();
+		query = Str();
 	}
 };
 
@@ -37,24 +38,21 @@ public:
 	Version() : major(1), minor(0) {}
 };
 
-enum class Status {UNPARSED = 0, PARSE_REQUEST_LINE, PARSE_HEADER, PARSE_BODY};
-
 class Request
 {
 public:
 	Method method;
 	Url url;
 	Version version;
-	map<string, string> header;
-	string body;
-	Status status;
+	map<Str, Str> header;
+	Str body;
 	Request()
 	{
 		method = Method::GET;
 		url = Url();
 		version = Version();
-		body = "";
-		status = Status::UNPARSED;
+		body = Str();
+		header = map<Str, Str>();
 	}
 };
 
@@ -64,14 +62,15 @@ public:
 	Version version;
 	int status_code;
 	string code_description;
-	map<string, string> header;
-	string body;
+	map<Str, Str> header;
+	Str body;
 	Response()
 	{
 		version = Version();
 		status_code = 200;
 		code_description = "200 OK";
-		body = "";
+		body = Str();
+		header = map<Str, Str>();
 	}
 
 	static map<int, string> code2description;
