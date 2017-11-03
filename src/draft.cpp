@@ -167,11 +167,11 @@ int ConnectionData::parse_request_line()
 	if(this->parse_status.stage != Parse_Stage::PARSE_REQUEST_LINE)
 		return PARSE_ERR;
 	this->parse_status.stage = PARSE_METHOD;
-	for(char* p == parse_status.section_begin; p < parse_status.current; p++)
+	for(char* p == this->parse_status.section_begin; p < this->parse_status.current; p++)
 	{
-		if(*p == ' ')
+		if(*p == ' ' || *p = '\r')
 		{
-			switch(parse_status)
+			switch(this->parse_status)
 			{
 				case Parse_Stage::PARSE_METHOD:
 				{
@@ -376,7 +376,7 @@ int ConnectionData::parse_url(char* end)
 					case '/':
 					{
 						this->parse_status.stage = Parse_Stage::PARSE_URL_PATH;
-						p--;
+						this->parse_status.section_begin = p + 1;
 						break;
 					}
 					default:
@@ -391,41 +391,121 @@ int ConnectionData::parse_url(char* end)
 				{
 					case ':':
 					{
-						if(*(p+1) == '/' && *(p+2) )
-						this->request.url.scheme = string(&(this->parse_status.section_begin), &p);
-						this->parse_status.stage = Parse_Stage::PARSE_URL_HOST;
-
+						if(*(p+1) == '/' && *(p+2) == '/')
+						{
+							this->parse_status.stage = Parse_Stage::PARSE_URL_HOST;
+							this->request.url.scheme.str = this->parse_status.section_begin;
+							this->request.url.scheme.len = p - this->parse_status.section_begin;
+							this->parse_status.section_begin = p + 3;
+							p += 2;
+							break;
+						}
+						else
+							return PARSE_ERR;
 					}
 					default:
 						if(!is_valid_scheme_char(*p))
 							return PARSE_ERR;
+						break;
 				}
 				break;
 			}
 
 			case Parse_Stage::PARSE_URL_HOST:
 			{
-				if(is_valid_host_char(*p))
+				switch(*p)
 				{
-
+					case ':':
+					{
+						this->parse_status.stage = Parse_Stage::PARSE_URL_PORT;
+						this->request.url.host.str = this->parse_status.section_begin;
+						this->request.url.host.len = p - this->parse_status.section_begin;
+						this->parse_status.section_begin = p + 1;
+						break;
+					}
+					case '/':
+					{
+						this->parse_status.stage = Parse_Stage::PARSE_URL_PATH;
+						this->request.url.host.str = this->parse_status.section_begin;
+						this->request.url.host.len = p - this->parse_status.section_begin;
+						this->parse_status.section_begin = p + 1;
+						break;
+					}
+					default:
+						if(!is_valid_host_char(*p))
+							return PARSE_ERR;
+						break;
 				}
+				break;
 			}
 
 			case Parse_Stage::PARSE_URL_PORT:
 			{
-
+				switch(*p)
+				{
+					case '/':
+					{
+						this->parse_status.stage = Parse_Stage::PARSE_URL_PATH;
+						this->request.url.port.str = this->parse_status.section_begin;
+						this->request.url.port.len = p - this->parse_status.section_begin;
+						this->parse_status.section_begin = p + 1;
+						break;
+					}
+					default:
+						if(!isdigit(*p))
+							return PARSE_ERR;
+						break;
+				}
+				break;
 			}
 
 			case Parse_Stage::PARSE_URL_PATH:
 			{
-
+				switch(*p)
+				{
+					case '?':
+					{
+						this->parse_status.stage = Parse_Stage::PARSE_URL_QUERY;
+						this->request.url.path.str = this->parse_status.section_begin;
+						this->request.url.path.len = p - this->parse_status.section_begin;
+						if(this->request.url.extension.str)
+						{
+							this->request.url.extension.len = p - this->request.url.extension.str;
+						}
+						this->parse_status.section_begin = p + 1;
+						break;
+					}
+					case '.':
+					{
+						this->request.url.extension.str = p + 1;
+						break;
+					}
+					default:
+						if(!is_valid_path_char(*p))
+							return PARSE_ERR;
+						break;
+				}
+				break;
 			}
 
 			case Parse_Stage::PARSE_URL_QUERY:
 			{
-
+				switch(*p)
+				{
+					/* TODO */
+					default:
+						if(!is_valid_query_char(*p))
+							return PARSE_ERR;
+					break;
+				}
+				break;
 			}
 		}
+	}
+
+	switch(this->parse_status.stage)
+	{
+		
 	}
 }
 

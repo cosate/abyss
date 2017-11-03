@@ -63,5 +63,6 @@ public:
 			return false;
 		}
 	}
-}
+};
+
 #endif
