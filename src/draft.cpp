@@ -104,11 +104,6 @@ int EventData::in_handler()
 #define PARSE_OK (0)
 #define PARSE_AGAIN (1)
 
-int parse_request()
-{
-
-}
-
 int ConnectionData::parse_line()
 {
 	while(parse_status.current < recv_buffer + buffer_length)
@@ -144,7 +139,7 @@ int ConnectionData::parse_line()
 				{
 					if(*(parse_status.current + 1) == '\t' || *(parse_status.current + 1) == ' ')
 					{
-						parse_status.current += 2;
+						parse_status.current += 1;
 						continue;
 					}
 					else
@@ -636,4 +631,95 @@ int ConnectionData::parse_http_version(char* end)
 	this->parse_status.section_begin = this->parse_status.current;
 	this->parse_status.stage = Parse_Stage::PARSE_HEADER;
 	return PARSE_OK;
+}
+
+int parse_header()
+{
+	if(this->parse_status.stage != Parse_Stage::PARSE_HEADER)
+		return PARSE_ERR;
+
+	if(this->parse_status.current - this->parse_status == 2)
+	{
+		if(this->request.http_version.major == 1 && this->request.http_version.minor == 1 && this->request.header.host.len == 0)
+		{
+			this->response.status_code = 400;
+			return PARSE_ERR;
+		}
+		this->parse_status.stage = Parse_Stage::PARSE_BODY;
+		this->parse_status.section_begin = this->parse_status.current;
+		return PARSE_OK;
+	}
+
+	this->response.status_code = 400;
+	this->parse_status.stage = Parse_Stage::PARSE_HEADER_NAME;
+	Str name();
+	Str value();
+	for(char* p = this->parse_status.section_begin; p < this->parse_status.current; p++)
+	{
+		switch(this->parse_status.stage)
+		{
+			case Parse_Stage::PARSE_HEADER_NAME:
+			{
+				switch(*p)
+				{
+					case ':':
+					{
+						name.str = this->section_begin;
+						name.len = p - this->parse_status.section_begin;
+						this->parse_status.stage = Parse_Stage::PARSE_HEADER_VALUE;
+						this->parse_status.section_begin = p + 1;
+						this->pass_whitespace();
+						break;
+					}
+					case '-':
+					{
+						*p = '_';
+						break;
+					}
+					default:
+					{
+						if(!isalnum(*p))
+							return Parse_Stage::PARSE_ERR;
+						if('A' <= *p && 'Z' >= *p)
+							*p = *p - 'A' + 'a';
+						break;
+					}
+				}
+				break;
+			}
+			case Parse_Stage::PARSE_HEADER_VALUE:
+			{
+				switch(*p)
+				{
+					case '\r':
+					{
+						value.str = this->parse_status.section_begin;
+						value.len = p - this->parse_status.section_begin;
+						break;
+					}
+					default:
+						break;
+				}
+				break;
+			}
+			default:
+				return PARSE_ERR;
+		}
+	}
+	this->response.status_code = 200;
+	Str* header = (Str*)(((char*)&(this->request.header)) + field2position[string(name.str, name.str + name.len)]);
+	header->str == value.str;
+	header->len = value.len;
+
+	this->parse_status.stage = Parse_Stage::PARSE_HEADER;
+	this->parse_status.section_begin = this->parse_status.current;
+	return PARSE_OK;
+}
+
+int parse_request()
+{
+	while(parse_line())
+	{
+
+	}
 }
