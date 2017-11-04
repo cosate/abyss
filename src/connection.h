@@ -67,6 +67,8 @@ public:
 
 	int in_handler();
 	int out_handler();
+
+	int parse_request();
 private:
 	void construct();
 
@@ -77,6 +79,18 @@ private:
 
 	int recv_request();
 	int parse_request();
+
+	void pass_whitespace();
+	bool is_valid_scheme_char();
+	bool is_valid_host_char();
+	bool is_valid_path_char();
+	bool is_valid_query_char();
+
+	int parse_line();
+	int parse_request_line();
+	int parse_method();
+	int parse_url();
+	int parse_http_version();
 };
 
 class ListenData : public EventData

@@ -35,7 +35,7 @@ class Version
 public:
 	int major;
 	int minor;
-	Version() : major(1), minor(0) {}
+	Version() : major(0), minor(0) {}
 };
 
 class Request
@@ -43,7 +43,7 @@ class Request
 public:
 	Method method;
 	Url url;
-	Version version;
+	Version http_version;
 	map<Str, Str> header;
 	Str body;
 	Request()

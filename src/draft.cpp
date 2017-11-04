@@ -167,6 +167,8 @@ int ConnectionData::parse_request_line()
 	if(this->parse_status.stage != Parse_Stage::PARSE_REQUEST_LINE)
 		return PARSE_ERR;
 	this->parse_status.stage = PARSE_METHOD;
+	this->response.status_code = 400;
+	this->pass_whitespace();
 	for(char* p == this->parse_status.section_begin; p < this->parse_status.current; p++)
 	{
 		if(*p == ' ' || *p = '\r')
@@ -177,7 +179,7 @@ int ConnectionData::parse_request_line()
 				{
 					if(parse_method(p) == PARSE_OK)
 					{
-						parse_status.section_begin = ++p;
+						p = this->parse_status.section_begin;
 						break;
 					}
 					else
@@ -185,18 +187,46 @@ int ConnectionData::parse_request_line()
 				}
 				case Parse_Stage::PARSE_URL:
 				{
-					parse_url(p);
-					parse_status.section_begin = ++p;
-					break;
+					if(parse_url(p) == PARSE_OK)
+					{
+						p = this->parse_status.section_begin;
+						break;
+					}
+					else
+						return PARSE_ERR;
 				}
 				case Parse_Stage::PARSE_HTTP_VERSION:
 				{
-					parse_http_version(p);
-					parse_status.section_begin = ++p;
-					break;
+					if(parse_method(p) == PARSE_OK)
+					{
+						p = this->parse_status.section_begin;
+						break;
+					}
+					else
+						return PARSE_ERR;
 				}
+				default:
+					return PARSE_ERR;
 			}
 		}
+	}
+
+	if(this->parse_status.stage != Parse_Stage::PARSE_HEADER)
+	{
+		this->response.status_code = 400;
+		return PARSE_ERR;
+	}
+	return PARSE_OK;
+}
+
+void ConnectionData::pass_whitespace()
+{
+	while(this->parse_status.section_begin < this->parse_status.current)
+	{
+		if(this->parse_status.section_begin == ' ' || this->parse_status.section_begin == '\t')
+			this->parse_status.section_begin++;
+		else
+			break;
 	}
 }
 
@@ -277,6 +307,8 @@ int ConnectionData::parse_method(char* end)
 	}
 
 	this->response.status_code = 200;
+	this->parse_status.section_begin = end;
+	this->pass_whitespace();
 	this->parse_status.stage = Parse_Stage::PARSE_URL;
 	return PARSE_OK;
 }
@@ -358,6 +390,8 @@ int ConnectionData::parse_url(char* end)
 {
 	if(this->parse_status.stage != Parse_Stage::PARSE_URL)
 		return PARSE_ERR;
+
+	this->response.status_code = 400;
 	for(char* p = this->parse_status.section_begin; p < end; p++)
 	{
 		switch(this->parse_status.stage)
@@ -505,10 +539,6 @@ int ConnectionData::parse_url(char* end)
 
 	switch(this->parse_status.stage)
 	{
-		case Parse_Stage::PARSE_URL_SCHEME:
-		{
-			return PARSE_ERR;
-		}
 		case Parse_Stage::PARSE_URL_HOST:
 		{
 			if(this->parse_status.section_begin == end)
@@ -517,27 +547,93 @@ int ConnectionData::parse_url(char* end)
 			}
 			else
 			{
-				this->request.url.host.str = this->parse_status.str;
+				this->request.url.host.str = this->parse_status.section_begin;
 				this->request.url.host.len = end - this->parse_status.section_begin;
 			}
 			break;
 		}
 		case Parse_Stage::PARSE_URL_PORT:
 		{
-
+			if(this->parse_status.section_begin == end)
+			{
+				return PARSE_ERR;
+			}
+			else
+			{
+				this->request.url.port.str = this->parse_status.section_begin;
+				this->request.url.port.len = end - this->parse_status.section_begin;
+			}
+			break;
 		}
 		case Parse_Stage::PARSE_URL_PATH:
 		{
-
+			this->request.url.port.str = this->parse_status.section_begin;
+			this->request.url.port.len = end - this->parse_status.section_begin;
+			if(this->request.url.extension.str)
+				this->request.url.extension.len = end - this->request.url.extension.str;
+			break;
 		}
 		case Parse_Stage::PARSE_URL_QUERY:
 		{
-
+			if(this->parse_status.section_begin == end)
+			{
+				return PARSE_ERR;
+			}
+			else
+			{
+				this->request.url.query.str = this->parse_status.section_begin;
+				this->request.url.query.len = end - this->parse_status.section_begin;
+			}
+			break;
 		}
+		default:
+			return PARSE_ERR;
 	}
+	this->response.status_code = 200;
+	this->parse_status.section_begin = end;
+	this->pass_whitespace();
+	this->parse_status.stage = Parse_Stage::PARSE_HTTP_VERSION;
+	return PARSE_OK;
 }
 
-int ConnectionData::parse_http_version()
+int ConnectionData::parse_http_version(char* end)
 {
+	if(this->parse_status.stage != Parse_Stage::PARSE_HTTP_VERSION)
+		return PARSE_ERR;
 
+	this->response.status_code = 400;
+
+	if(end - this->parse_status.section_begin <= 5 || strncasecmp(this->parse_status.section_begin, "http/", 5))
+		return PARSE_ERR;
+
+	char* p = this->parse_status.section_begin;
+	for(; p < end && *p != '.'; p++)
+	{
+		if(isdigit(*p))
+			this->request.http_version.major = this->request.http_version.major * 10 + (*p) - '0';
+		else
+			return PARSE_ERR;
+	}
+
+	if(p == end || p + 1 == end)
+		return PARSE_ERR;
+
+	for(p += 1; p < end; p++)
+	{
+		if(isdigit(*p))
+			this->request.http_version.minor = this->request.http_version.minor * 10 + (*p) - '0';
+		else
+			return PARSE_ERR;
+	}
+
+	if(this->request.http_version.major != 1 || (this->request.http_version.minor != 0 && this->request.http_version.minor != 1))
+	{
+		this->response.status_code = 505;
+		return PARSE_ERR;
+	}
+
+	this->response.status_code = 200;
+	this->parse_status.section_begin = this->parse_status.current;
+	this->parse_status.stage = Parse_Stage::PARSE_HEADER;
+	return PARSE_OK;
 }
