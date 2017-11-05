@@ -106,15 +106,15 @@ int EventData::in_handler()
 
 int ConnectionData::parse_line()
 {
-	while(parse_status.current < recv_buffer + buffer_length)
+	while(this->parse_status.current < this->recv_buffer + buffer_length)
 	{
-		if(*(parse_status.current) == '\r')
+		if(*(this->parse_status.current) == '\r')
 		{
-			if(parse_status.current + 1 < recv_buffer + buffer_length)
+			if(this->parse_status.current + 1 < this->recv_buffer + this->buffer_length)
 			{
-				if(*(parse_status.current + 1) == '\n')
+				if(*(this->parse_status.current + 1) == '\n')
 				{
-					parse_status.current += 2;
+					this->parse_status.current += 2;
 					return PARSE_OK;
 				}
 				else
@@ -126,20 +126,20 @@ int ConnectionData::parse_line()
 			else
 				return PARSE_AGAIN;
 		}
-		else if(*(parse_status.current) == '\n')
+		else if(*(this->parse_status.current) == '\n')
 		{
-			if(parse_status.stage == Parse_Stage::PARSE_REQUEST_LINE)
+			if(this->parse_status.stage == Parse_Stage::PARSE_REQUEST_LINE)
 			{
 				this->response.status_code = 400;
 				return PARSE_ERR;
 			}
-			else if(parse_status.stage == PARSE_HEADER)
+			else if(this->parse_status.stage == PARSE_HEADER)
 			{
-				if(parse_status.current + 1 < recv_buffer + buffer_length)
+				if(this->parse_status.current + 1 < this->recv_buffer + this->buffer_length)
 				{
-					if(*(parse_status.current + 1) == '\t' || *(parse_status.current + 1) == ' ')
+					if(*(this->parse_status.current + 1) == '\t' || *(this->parse_status.current + 1) == ' ')
 					{
-						parse_status.current += 1;
+						this->parse_status.current += 1;
 						continue;
 					}
 					else
@@ -152,7 +152,7 @@ int ConnectionData::parse_line()
 					return PARSE_AGAIN;
 			}
 		}
-		parse_status.current++;
+		this->parse_status.current++;
 	}
 	return PARSE_AGAIN;
 }
@@ -708,7 +708,7 @@ int parse_header()
 	}
 	this->response.status_code = 200;
 	Str* header = (Str*)(((char*)&(this->request.header)) + field2position[string(name.str, name.str + name.len)]);
-	header->str == value.str;
+	header->str = value.str;
 	header->len = value.len;
 
 	this->parse_status.stage = Parse_Stage::PARSE_HEADER;
@@ -716,10 +716,67 @@ int parse_header()
 	return PARSE_OK;
 }
 
+int parse_body()
+{
+	if(this->parse_status.stage != Parse_Stage::PARSE_BODY)
+		return PARSE_ERR;
+
+	switch(this->request.method)
+	{
+		case Method::PUT:
+		case Method::POST:
+		{
+			if(this->request.header.content_length.str == NULL && this->request.header.content_length.len == 0)
+			{
+				this->response.status_code = 400;
+				return PARSE_ERR;
+			}
+			size_t contlength = 0;
+			for(int i = 0; i < this->request.header.content_length.len; i++)
+			{
+				if(!isdigit(*(this->request.header.content_length.str + i)))
+				{
+					this->response.status_code = 400;
+					return PARSE_ERR;
+				}
+				contlength = contlength * 10 + *(this->request.header.content_length.str + i) - '0';
+			}
+			if(this->buffer_length < contlength)
+				return PARSE_AGAIN;
+
+			this->request.body.str = this->parse_status.section_begin;
+			this->request.body.len = contlength;
+			this->parse_status.stage = Parse_Stage::PARSE_DONE;
+			this->parse_status.section_begin += contlength;
+			return PARSE_OK;
+		}
+		default:
+		{
+			if(this->request.header.content_length.str != NULL && this->request.header.content_length.len != 0)
+			{
+				this->response.status_code = 400;
+				return PARSE_ERR;
+			}
+			this->parse_status = PARSE_DONE;
+			return PARSE_OK;
+		}
+	}
+}
+
 int parse_request()
 {
-	while(parse_line())
+	while(parse_line() == PARSE_OK && this->parse_status.stage != PARSE_BODY)
 	{
+		switch(this->parse_status.stage)
+		{
+			case Parse_Stage::PARSE_REQUEST_LINE:
+			{
+				if(parse_request_line() == PARSE_OK)
+			}
+			case Parse_Stage::PARSE_HEADER:
+			{
 
+			}
+		}
 	}
 }

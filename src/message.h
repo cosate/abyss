@@ -168,7 +168,7 @@ public:
 		url = Url();
 		version = Version();
 		body = Str();
-		header = RequestHeader();;;
+		header = RequestHeader();
 	}
 };
 

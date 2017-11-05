@@ -87,10 +87,14 @@ private:
 	bool is_valid_query_char();
 
 	int parse_line();
+	
 	int parse_request_line();
 	int parse_method();
 	int parse_url();
 	int parse_http_version();
+
+	int parse_header();
+	int parse_body();
 };
 
 class ListenData : public EventData
