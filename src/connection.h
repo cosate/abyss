@@ -49,9 +49,10 @@ public:
 	time_t active_time;
 	Request request;
 	Response response;
-	char send_buffer[BUFFERSIZE];
-	char recv_buffer[BUFFERSIZE];
-	int buffer_length;
+	char send_buffer[BUFFER_SIZE];
+	char recv_buffer[BUFFER_SIZE];
+	int recv_buffer_length;
+	int send_buffer_length;
 	struct parse_status
 	{
 		char* section_begin;
@@ -68,6 +69,8 @@ public:
 	{
 		construct();
 	}
+
+	~ConnectionData(){}
 
 	int in_handler();
 	int out_handler();
@@ -100,8 +103,10 @@ private:
 	int parse_header();
 	int parse_body();
 
-	int build_response_err();
-	int build_response_ok();
+	void build_response_status_line();
+	void build_response_date();
+	void build_response_err();
+	void build_response_ok();
 };
 
 class ListenData : public EventData
@@ -109,6 +114,8 @@ class ListenData : public EventData
 public:
 	ListenData() : EventData() {}
 	ListenData(int f) : EventData(f) {}
+
+	~ListenData(){}
 
 	int in_handler();
 };

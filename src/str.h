@@ -1,6 +1,8 @@
 #ifndef ABYSS_STR_H
 #define ABYSS_STR_H
 
+#include<string>
+
 class Str
 {
 public:
@@ -35,7 +37,7 @@ public:
 		return !((*this) == other);
 	}
 
-	bool operator<(const Str& other)
+	bool operator<(const Str& other)//For map
 	{
 		if(len < other.len)
 		{

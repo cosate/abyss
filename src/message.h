@@ -4,7 +4,6 @@
 #include<string>
 #include<map>
 
-#include"connection.h"
 #include"str.h"
 using namespace std;
 
@@ -151,7 +150,7 @@ public:
     }
 
     static map<string, size_t> field2position;
-    static init_field_position();
+    static void init_field_position();
 };
 
 class Request
@@ -190,7 +189,10 @@ public:
 	}
 
 	static map<int, string> code2description;
-	static init_code_description();
+	static void init_code_description();
+
+	static map<string, string> mime;
+	static void init_mime();
 };
 
 #endif

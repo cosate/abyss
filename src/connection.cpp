@@ -45,7 +45,8 @@ void ConnectionData::construct()
 	this->response = Response();
 	memset(this->send_buffer, 0, BUFFERSIZE);
 	memset(this->recv_buffer, 0, BUFFERSIZE);
-	this->buffer_length = 0;
+	this->recv_buffer_length = 0;
+	this->send_buffer_length = 0;
 	this->parse_status.section_begin = recv_buffer;
 	this->parse_status.current = recv_buffer;
 	this->parse_status.stage = Parse_Stage::PARSE_REQUEST_LINE;
@@ -127,7 +128,7 @@ int ConnectionData::recv_request()
 {
 	while(1)
 	{
-		ssize_t bytes = recv(this->fd, this->recv_buffer + this->buffer_length, BUFFER_SIZE - this->buffer_length, 0);
+		ssize_t bytes = recv(this->fd, this->recv_buffer + this->recv_buffer_length, BUFFER_SIZE - this->recv_buffer_length, 0);
 		if(bytes == 0)
 			return ABYSS_ERR;
 		else if(bytes == -1)
@@ -139,16 +140,11 @@ int ConnectionData::recv_request()
 		}
 		else
 		{
-			this->buffer_length += bytes;
-			if(BUFFER_SIZE == c->buffer_length)
+			this->recv_buffer_length += bytes;
+			if(BUFFER_SIZE == c->recv_buffer_length)
 				return ABYSS_OK;
 		}
 	}
-}
-
-int ConnectionData::parse_request()
-{
-
 }
 
 int ConnectionData::in_handler()

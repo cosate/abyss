@@ -1,116 +1,14 @@
-class EventData
-{
-public:
-	int fd;
-	virtual int in_handler() = 0;
-	EventData() : fd(-1) {}
-	EventData(int f) :fd(f) {}
-};
-
-class ConnectionData : public EventData
-{
-public:
-	time_t active_time;
-	Request request;
-	Response response;
-	char send_buffer[BUFFERSIZE];
-	char recv_buffer[BUFFERSIZE];
-	int buffer_length;
-	Connection() : EventData()
-	{
-		construct();
-	}
-
-	Connection(int f) : EventData(f)
-	{
-		construct();
-	}
-
-	int in_handler();
-	int out_handler();
-private:
-	void construct();
-};
-
-void ConnectionData::construct()
-{
-	request = Request();
-	response = Response();
-	memset(send_buffer, 0, BUFFERSIZE);
-	memset(recv_buffer, 0, BUFFERSIZE);
-	buffer_length = 0;
-}
-
-int ConnectionData::in_handler()
-{
-
-}
-
-int ConnectionData::out_handler()
-{
-
-}
-
-class ListenData : public EventData
-{
-public:
-	ListenData() : EventData() {}
-	ListenData(int f) : EventData(f) {}
-
-	int in_handler();
-}
-
-int EventData::in_handler()
-{
-	int connfd;
-	while((connfd = accept(this->fd, NULL, NULL)) != -1)
-	{
-		if(connections.size() >= MAX_CONNECTIONS)
-		{
-			close(connfd);
-			continue;
-		}
-		if(set_nonblock(connfd) == ABYSS_ERR)
-		{
-			close(connfd);
-			continue;
-		}
-		EventData* c = new ConnectionData(connfd);
-		
-		epoll_event connev;
-		connev.events = EPOLLIN;
-		connev.data.ptr = c;
-		
-		if(epoll_ctl(epfd, EPOLL_CTL_ADD, connfd, &connev) == ABYSS_ERR)
-		{
-			close(connfd);
-			delete c;
-			continue;
-		}
-		c->active_time = time(NULL);
-		connections.push_back(c);
-		push_heap(connections.begin(), connections.end(), cmp);
-	}
-
-	if(errno != EWOULDBLOCK)
-	{
-		ABYSS_ERR_MSG(strerror(errno));
-		return ABYSS_ERR;
-	}
-	return ABYSS_OK;
-}
-
 #define PARSE_ERR (-1)
 #define PARSE_OK (0)
 #define PARSE_AGAIN (1)
 
 int ConnectionData::parse_line()
 {
-	while(this->parse_status.current < this->recv_buffer + buffer_length)
+	while(this->parse_status.current < this->recv_buffer + recv_buffer_length)
 	{
 		if(*(this->parse_status.current) == '\r')
 		{
-			if(this->parse_status.current + 1 < this->recv_buffer + this->buffer_length)
+			if(this->parse_status.current + 1 < this->recv_buffer + this->recv_buffer_length)
 			{
 				if(*(this->parse_status.current + 1) == '\n')
 				{
@@ -135,7 +33,7 @@ int ConnectionData::parse_line()
 			}
 			else if(this->parse_status.stage == PARSE_HEADER)
 			{
-				if(this->parse_status.current + 1 < this->recv_buffer + this->buffer_length)
+				if(this->parse_status.current + 1 < this->recv_buffer + this->recv_buffer_length)
 				{
 					if(*(this->parse_status.current + 1) == '\t' || *(this->parse_status.current + 1) == ' ')
 					{
@@ -741,7 +639,7 @@ int parse_body()
 				}
 				contlength = contlength * 10 + *(this->request.header.content_length.str + i) - '0';
 			}
-			if(this->buffer_length < contlength)
+			if(this->recv_buffer_length < contlength)
 				return PARSE_AGAIN;
 
 			this->request.body.str = this->parse_status.section_begin;
@@ -761,6 +659,26 @@ int parse_body()
 			return PARSE_OK;
 		}
 	}
+}
+
+void ConnectionData::build_response_status_line()
+{
+	int n = sprintf(this->send_buffer, "HTTP/1.%d", this->request.http_version.minor);
+	this->send_buffer_length += n;
+	string des = this->code2description[this->response.status_code];
+	memcpy(this->send_buffer + this->send_buffer_length, des, des.length());
+	this->send_buffer_length += des.length();
+	memcpy(this->send_buffer + this->send_buffer_length, "\r\n");
+	this->send_buffer_length += 2;
+}
+
+void ConnectionData::build_response_date()
+{
+	time_t t = time(NULL);
+	tm* time = localtime(&t);
+	int n = strftime(this->send_buffer + this->send_buffer_length, BUFFER_SIZE - this->send_buffer_length,
+				"Date: %a, %d %b, %y, %H:%M:%S GMT\r\n", time);
+	this->send_buffer_length += n;
 }
 
 void ConnectionData::build_response_ok()
@@ -802,7 +720,10 @@ int ConnectionData::parse_request()
 						break;
 					}
 					default:
-						return PARSE_ERR;
+					{
+						ABYSS_ERR_MSG("invalid parse stage of request");
+						exit(ABYSS_ERR);
+					}
 				}
 				break;
 			}
@@ -816,7 +737,10 @@ int ConnectionData::parse_request()
 				return PARSE_AGAIN;
 			}
 			default:
-				return PARSE_ERR;
+			{
+				ABYSS_ERR_MSG("invalid parse stage of request");
+				exit(ABYSS_ERR);
+			}
 		}
 	}
 
@@ -839,6 +763,9 @@ int ConnectionData::parse_request()
 			return PARSE_OK;
 		}
 		default:
-			return PARSE_ERR;
+		{
+			ABYSS_ERR_MSG("invalid parse stage of request");
+			exit(ABYSS_ERR);
+		}
 	}
 }
