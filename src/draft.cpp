@@ -763,20 +763,82 @@ int parse_body()
 	}
 }
 
-int parse_request()
+void ConnectionData::build_response_ok()
 {
-	while(parse_line() == PARSE_OK && this->parse_status.stage != PARSE_BODY)
-	{
-		switch(this->parse_status.stage)
-		{
-			case Parse_Stage::PARSE_REQUEST_LINE:
-			{
-				if(parse_request_line() == PARSE_OK)
-			}
-			case Parse_Stage::PARSE_HEADER:
-			{
 
+}
+
+void ConnectionData::build_response_err()
+{
+
+}
+
+int ConnectionData::parse_request()
+{
+	while(this->parse_status.stage != PARSE_BODY)
+	{
+		switch(parse_line())
+		{
+			case PARSE_OK:
+			{
+				switch(this->parse_status.stage)
+				{
+					case Parse_Stage::PARSE_REQUEST_LINE:
+					{
+						if(parse_request_line() != PARSE_OK)
+						{
+							build_response_err();
+							return PARSE_ERR;
+						}
+						break;
+					}
+					case Parse_Stage::PARSE_HEADER:
+					{
+						if(parse_header() != PARSE_OK)
+						{
+							build_response_err();
+							return PARSE_ERR;
+						}
+						break;
+					}
+					default:
+						return PARSE_ERR;
+				}
+				break;
 			}
+			case PARSE_ERR:
+			{
+				build_response_err();
+				return PARSE_ERR;
+			}
+			case PARSE_AGAIN:
+			{
+				return PARSE_AGAIN;
+			}
+			default:
+				return PARSE_ERR;
 		}
+	}
+
+	switch(parse_body())
+	{
+		case PARSE_ERR:
+		{
+			build_response_err();
+			return PARSE_ERR;
+		}
+		case PARSE_AGAIN:
+		{
+			return PARSE_AGAIN;
+		}
+		case PARSE_OK:
+		{
+			if(this->parse_status.stage != Parse_Stage::PARSE_DONE)
+				return PARSE_ERR;
+			build_response_ok();
+			return PARSE_OK;
+		}
+		default:
+			return PARSE_ERR;
 	}
 }

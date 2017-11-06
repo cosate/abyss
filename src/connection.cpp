@@ -26,6 +26,19 @@ bool cmp(EventData* c1, EventData* c2)
 	return c1->active_time > c2->active_time;
 }
 
+int EventData::in_handler()
+{
+	return ABYSS_OK;
+}
+
+int EventData::out_handler()
+{
+	return ABYSS_OK;
+}
+
+EventData::~EventData()
+{}
+
 void ConnectionData::construct()
 {
 	this->request = Request();

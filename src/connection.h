@@ -14,9 +14,13 @@ class EventData
 public:
 	int fd;
 	uint32_t events;
-	virtual int in_handler() = 0;
 	EventData() : fd(-1), events(EPOLLIN) {}
 	EventData(int f) :fd(f), events(EPOLLIN) {}
+
+	virtual int in_handler();
+	virtual int out_handler();
+
+	virtual ~EventData() = 0;
 };
 
 enum class Parse_Stage
@@ -95,6 +99,9 @@ private:
 
 	int parse_header();
 	int parse_body();
+
+	int build_response_err();
+	int build_response_ok();
 };
 
 class ListenData : public EventData
