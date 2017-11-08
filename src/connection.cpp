@@ -43,8 +43,8 @@ void ConnectionData::construct()
 {
 	this->request = Request();
 	this->response = Response();
-	memset(this->send_buffer, 0, BUFFERSIZE);
-	memset(this->recv_buffer, 0, BUFFERSIZE);
+	memset(this->send_buffer, 0, BUFFER_SIZE);
+	memset(this->recv_buffer, 0, BUFFER_SIZE);
 	this->recv_buffer_length = 0;
 	this->send_buffer_length = 0;
 	this->parse_status.section_begin = recv_buffer;
