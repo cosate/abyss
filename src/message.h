@@ -35,6 +35,7 @@ public:
 	int major;
 	int minor;
 	Version() : major(0), minor(0) {}
+	Version(int maj, int min) : major(maj), minor(min){}
 };
 
 class RequestHeader
@@ -174,18 +175,18 @@ public:
 class Response
 {
 public:
-	Version version;
+	Version http_version;
 	int status_code;
 	string code_description;
-	map<Str, Str> header;
-	Str body;
+	//map<Str, Str> header;
+	//Str body;
 	Response()
 	{
 		version = Version();
 		status_code = 200;
 		code_description = "200 OK";
-		body = Str();
-		header = map<Str, Str>();
+		//body = Str();
+		//header = map<Str, Str>();
 	}
 
 	static map<int, string> code2description;

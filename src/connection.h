@@ -103,6 +103,8 @@ private:
 	int parse_header();
 	int parse_body();
 
+	void send_buffer_append(string);
+
 	void build_response_status_line();
 	void build_response_date();
 	void build_response_err();

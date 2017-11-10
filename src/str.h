@@ -1,8 +1,6 @@
 #ifndef ABYSS_STR_H
 #define ABYSS_STR_H
 
-#include<string>
-
 class Str
 {
 public:

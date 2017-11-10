@@ -90,7 +90,7 @@ int ConnectionData::parse_request_line()
 				}
 				case Parse_Stage::PARSE_HTTP_VERSION:
 				{
-					if(parse_method(p) == PARSE_OK)
+					if(parse_http_version(p) == PARSE_OK)
 					{
 						p = this->parse_status.section_begin;
 						break;
@@ -99,7 +99,10 @@ int ConnectionData::parse_request_line()
 						return PARSE_ERR;
 				}
 				default:
-					return PARSE_ERR;
+				{
+					ABYSS_ERR_MSG("invalid parse stage in parse_request_line");
+					exit(ABYSS_ERR);
+				}
 			}
 		}
 	}
@@ -427,6 +430,12 @@ int ConnectionData::parse_url(char* end)
 				}
 				break;
 			}
+
+			default:
+			{
+				ABYSS_ERR_MSG("invalid stage in parse_url");
+				exit(ABYSS_ERR);
+			}
 		}
 	}
 
@@ -601,7 +610,10 @@ int parse_header()
 				break;
 			}
 			default:
-				return PARSE_ERR;
+			{
+				ABYSS_ERR_MSG("invalid stage in parse_header");
+				exit(ABYSS_ERR);
+			}
 		}
 	}
 	this->response.status_code = 200;
@@ -663,13 +675,16 @@ int parse_body()
 
 void ConnectionData::build_response_status_line()
 {
-	int n = sprintf(this->send_buffer, "HTTP/1.%d", this->request.http_version.minor);
+	this->response.http_version.major = this->request.http_version.major;
+	this->response.http_version.minor = this->request.http_version.minor;
+
+	int n = sprintf(this->send_buffer, "HTTP/%d.%d", this->response.http_version.major, this->response.http_version.minor);
 	this->send_buffer_length += n;
-	string des = this->code2description[this->response.status_code];
-	memcpy(this->send_buffer + this->send_buffer_length, des, des.length());
-	this->send_buffer_length += des.length();
-	memcpy(this->send_buffer + this->send_buffer_length, "\r\n");
-	this->send_buffer_length += 2;
+
+	this->response.code_description = this->code2description[this->response.status_code];
+	send_buffer_append(this->response.code_description)
+
+	send_buffer_append("\r\n");
 }
 
 void ConnectionData::build_response_date()
@@ -681,9 +696,60 @@ void ConnectionData::build_response_date()
 	this->send_buffer_length += n;
 }
 
+void ConnectionData::send_buffer_append(string s)
+{
+	memcpy(this->send_buffer + this->send_buffer_length, s);
+	this->send_buffer_length += s.length();
+}
+
 void ConnectionData::build_response_ok()
 {
+	//For now GET only
+	if(this->request.method != Method::GET)
+	{
+		this->response.status_code = 501;
+		this->build_response_err();
+		return;
+	}
 
+	switch(this->response.status_code)
+	{
+		case 100:
+		case 101:
+		case 201:
+		case 202:
+		case 203:
+		case 204:
+		case 205:
+		case 206:
+		{
+			/* TODO */
+			break;
+		}
+		case 200:
+			break;
+
+		default:
+		{
+			ABYSS_ERR_MSG("invalid status code in build_response_ok");
+			exit(ABYSS_ERR);
+		}
+	}
+
+	build_response_status_line();
+
+	send_buffer_append("Server: Abyss\r\n");
+	build_response_date();
+
+	send_buffer_append("Content_Type: ");
+	if(this->request.url.extension != NULL)
+		send_buffer_append(mime[string(this->request.url.extension.str, this->request.url.extension.str + this->request.url.extension.len)]);
+	else
+		send_buffer_append("text/html");
+	send_buffer_append("\r\n");
+	send_buffer_append("Content-Length: ");
+	send_buffer_append()
+	send_buffer_append("")
 }
 
 void ConnectionData::build_response_err()
