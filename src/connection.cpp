@@ -193,16 +193,34 @@ int ConnectionData::in_handler()
 	{
 		return ABYSS_ERR;
 	}
-	if(this->parse_request() != ABYSS_ERR)
+	
+	switch(this->parse_request())
 	{
-		
+		case PARSE_AGAIN:
+			break;
+
+		case PARSE_ERR:
+		case PARSE_OK:
+		{
+			this->disable_in();
+			this->enable_out();
+			break;
+		}
+		default:
+			{
+				ABYSS_ERR_MSG("unknown return value from parse_request");
+				exit(ABYSS_ERR);
+			}
 	}
 	return ABYSS_OK;
 }
 
 int ConnectionData::out_handler()
 {
+	if(this->response.resource_fd != -1)
+		set_tcp_cork(this->response.resource_fd);
 
+	
 }
 
 #define PARSE_ERR (-1)

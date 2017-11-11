@@ -85,8 +85,6 @@ public:
 
 	int in_handler();
 	int out_handler();
-
-	int parse_request();
 private:
 	void construct();
 
