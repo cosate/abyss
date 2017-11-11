@@ -12,6 +12,8 @@
 #include<sys/time.h>
 #include<sys/types.h>
 
+#include<fcntl.h>
+
 using namespace std;
 
 int main(int argc, char* argv[])
@@ -79,5 +81,6 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
+
 	return 0;
 }

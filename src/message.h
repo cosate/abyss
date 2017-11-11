@@ -94,6 +94,8 @@ public:
     Str etag;
     Str expires;
     Str last_modified;
+    /* chrome */
+    Str upgrade_insecure_requests;
     RequestHeader()
     {
     	connection = Str()
@@ -148,6 +150,7 @@ public:
 	    etag = Str()
 	    expires = Str()
 	    last_modified = Str()
+	    upgrade_insecure_requests = Str();
     }
 
     static map<string, size_t> field2position;
@@ -180,6 +183,7 @@ public:
 	string code_description;
 	//map<Str, Str> header;
 	//Str body;
+	int resource_fd;
 	Response()
 	{
 		version = Version();
@@ -187,6 +191,7 @@ public:
 		code_description = "200 OK";
 		//body = Str();
 		//header = map<Str, Str>();
+		resource_fd = -1;
 	}
 
 	static map<int, string> code2description;

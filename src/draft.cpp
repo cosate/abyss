@@ -739,21 +739,46 @@ void ConnectionData::build_response_ok()
 	build_response_status_line();
 
 	send_buffer_append("Server: Abyss\r\n");
+
 	build_response_date();
 
-	send_buffer_append("Content_Type: ");
+	send_buffer_append("Content-Type: ");
 	if(this->request.url.extension != NULL)
 		send_buffer_append(mime[string(this->request.url.extension.str, this->request.url.extension.str + this->request.url.extension.len)]);
 	else
 		send_buffer_append("text/html");
+
 	send_buffer_append("\r\n");
 	send_buffer_append("Content-Length: ");
-	send_buffer_append()
-	send_buffer_append("")
+
+	struct stat status;
+	fstat(this->response.resource_fd, &status);
+	int contlength = status.st_size;
+	int n = sprintf(this->send_buffer + this->send_buffer_length, "%d\r\n", contlength);
+	this->send_buffer_length += n;
+
+	send_buffer_append("\r\n");
 }
 
 void ConnectionData::build_response_err()
 {
+	if(this->response.status_code < 300)
+	{
+		ABYSS_ERR_MSG("wrong status code");
+		exit(ABYSS_ERR);
+	}
+
+	build_response_status_line();
+	send_buffer_append("Server: Abyss\r\n");
+	build_response_date();
+
+	send_buffer_append("Connection: close\r\n");
+	send_buffer_append("Content-Type: text/html\r\n");
+
+	if(this->response.resource_fd != -1)
+		close(this->response.resource_fd);
+
+	
 
 }
 
@@ -825,8 +850,17 @@ int ConnectionData::parse_request()
 		{
 			if(this->parse_status.stage != Parse_Stage::PARSE_DONE)
 				return PARSE_ERR;
-			build_response_ok();
-			return PARSE_OK;
+
+			if(handle_path() == PARSE_OK)
+			{
+				build_response_ok();
+				return PARSE_OK;
+			}
+			else
+			{
+				build_response_err();
+				return PARSE_ERR;
+			}
 		}
 		default:
 		{
@@ -834,4 +868,36 @@ int ConnectionData::parse_request()
 			exit(ABYSS_ERR);
 		}
 	}
+}
+
+int ConnectionData::handle_path()
+{
+	string path;
+	if(this->request.url.path.str == NULL && this->request.url.path.len == 0)
+		path = "./";
+	else
+		path = string(this->request.url.path.str, this->request.url.path.str + this->request.url.path.len);
+
+	int fd = openat(server_config.src_root, path, O_RDONLY);
+	if(fd == -1)
+	{
+		this->response.status_code = 404;
+		return PARSE_ERR;
+	}
+
+	struct stat status;
+	fstat(fd, &status);
+	if(S_ISDIR(status.st_mode))
+	{
+		int dir_fd = fd;
+		fd = openat(dir_fd, "index.html", O_RDONLY);
+		if(fd == -1)
+		{
+			this->response.status_code = 404;
+			return PARSE_ERR;
+		}
+	}
+
+	this->response.resource_fd = fd;
+	return PARSE_OK;
 }

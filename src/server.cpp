@@ -19,7 +19,7 @@
 using namespace std;
 
 vector<EventData*> connections;
-Config config;
+Config server_config;
 int epfd;
 
 void server_init()
