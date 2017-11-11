@@ -774,12 +774,28 @@ void ConnectionData::build_response_err()
 
 	send_buffer_append("Connection: close\r\n");
 	send_buffer_append("Content-Type: text/html\r\n");
+	send_buffer_append("Content-Length: ");
 
 	if(this->response.resource_fd != -1)
 		close(this->response.resource_fd);
 
-	
+	char err_file[10];
+	snprintf(err_file, 10, "%d.html",this->response.status_code);
+	this->response.resource_fd = openat(server_config.err_root, err_file, O_RDONLY);
+	if(this->response.resource_fd == -1)
+	{
+		ABYSS_ERR_MSG("error file not exist");
+		exit(ABYSS_ERR);
+	}
 
+	struct stat status;
+	fstat(this->response.resource_fd, &status);
+
+	int contlength = status.st_size;
+	int n = sprintf(this->send_buffer + this->send_buffer_length, "%d\r\n", contlength);
+	this->send_buffer_length += n;
+
+	send_buffer_append("\r\n");
 }
 
 int ConnectionData::parse_request()

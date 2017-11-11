@@ -23,6 +23,17 @@ public:
 	virtual ~EventData() = 0;
 };
 
+class ListenData : public EventData
+{
+public:
+	ListenData() : EventData() {}
+	ListenData(int f) : EventData(f) {}
+
+	~ListenData(){}
+
+	int in_handler();
+};
+
 enum class Parse_Stage
 {
 	PARSE_REQUEST_LINE = 0,
@@ -109,17 +120,6 @@ private:
 	void build_response_date();
 	void build_response_err();
 	void build_response_ok();
-};
-
-class ListenData : public EventData
-{
-public:
-	ListenData() : EventData() {}
-	ListenData(int f) : EventData(f) {}
-
-	~ListenData(){}
-
-	int in_handler();
 };
 
 bool cmp(EventData*, EventData*);

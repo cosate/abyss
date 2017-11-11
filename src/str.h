@@ -35,7 +35,7 @@ public:
 		return !((*this) == other);
 	}
 
-	bool operator<(const Str& other)//For map
+	bool operator<(const Str& other)//For map, actually not used-_-||
 	{
 		if(len < other.len)
 		{
