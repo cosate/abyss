@@ -164,27 +164,46 @@ int ConnectionData::disable_out()
 	return ABYSS_OK;
 }
 
+#define BUFFER_ERR (-1)
+#define BUFFER_OK (0)
+#define BUFFER_AGAIN (1)
+#define BUFFER_CLOSE (2)
+
 int ConnectionData::recv_request()
 {
 	while(1)
 	{
 		ssize_t bytes = recv(this->fd, this->recv_buffer + this->recv_buffer_length, BUFFER_SIZE - this->recv_buffer_length, 0);
 		if(bytes == 0)
-			return ABYSS_ERR;
+			return BUFFER_CLOSE;
 		else if(bytes == -1)
 		{
 			if(errno == EAGAIN || errno == EWOULDBLOCK)
-				return ABYSS_OK;
+				return BUFFER_AGAIN;
 			else
-				return ABYSS_ERR;
+				return BUFFER_ERR;
 		}
 		else
 		{
 			this->recv_buffer_length += bytes;
 			if(BUFFER_SIZE == c->recv_buffer_length)
-				return ABYSS_OK;
+				return BUFFER_AGAIN;
 		}
 	}
+}
+
+int ConnectionData::send_response()
+{
+	size_t remain = this->send_buffer_length;
+	while(remain > 0)
+	{
+		ssize_t len = send(this->fd, this->send_buffer + (this->send_buffer_length - remain), remain, 0);
+		if(len == -1)
+			return (errno == EAGAIN || errno == EWOULDBBLOCK) ? BUFFER_AGAIN : BUFFER_ERR;
+		remain -= len;
+	}
+	this->send_buffer_length = 0;
+	return BUFFER_OK;
 }
 
 int ConnectionData::in_handler()
@@ -220,7 +239,7 @@ int ConnectionData::out_handler()
 	if(this->response.resource_fd != -1)
 		set_tcp_cork(this->response.resource_fd);
 
-	
+	int re
 }
 
 #define PARSE_ERR (-1)

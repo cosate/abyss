@@ -112,6 +112,7 @@ private:
 	int parse_header();
 	int parse_body();
 
+	int send_response();
 	void send_buffer_append(string);
 
 	void build_response_status_line();
