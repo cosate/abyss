@@ -90,6 +90,7 @@ void ConnectionData::construct()
 	this->parse_status.section_begin = recv_buffer;
 	this->parse_status.current = recv_buffer;
 	this->parse_status.stage = Parse_Stage::PARSE_REQUEST_LINE;
+	this->send_status.send_begin = send_buffer;
 }
 
 int ConnectionData::enable_in()
@@ -194,21 +195,22 @@ int ConnectionData::recv_request()
 
 int ConnectionData::send_response()
 {
-	size_t remain = this->send_buffer_length;
-	while(remain > 0)
+	while(this->send_status.send_begin - this->send_buffer < this->send_buffer_length)
 	{
-		ssize_t len = send(this->fd, this->send_buffer + (this->send_buffer_length - remain), remain, 0);
+		ssize_t len = send(this->fd, this->send_status.send_begin, this->send_buffer_length - (this->send_status.send_begin - this->send_buffer), 0);
 		if(len == -1)
 			return (errno == EAGAIN || errno == EWOULDBBLOCK) ? BUFFER_AGAIN : BUFFER_ERR;
-		remain -= len;
+		this->send_status.send_begin += len;
 	}
+
 	this->send_buffer_length = 0;
+	this->send_status.send_begin = this->send_buffer;
 	return BUFFER_OK;
 }
 
 int ConnectionData::in_handler()
 {
-	if(this->recv_request() == ABYSS_ERR)
+	if(this->recv_request() != BUFFER_AGAIN)
 	{
 		return ABYSS_ERR;
 	}
@@ -237,9 +239,49 @@ int ConnectionData::in_handler()
 int ConnectionData::out_handler()
 {
 	if(this->response.resource_fd != -1)
-		set_tcp_cork(this->response.resource_fd);
+		set_tcp_cork(this->fd);
 
-	int re
+	switch(send_response())
+	{
+		case BUFFER_AGAIN:
+			return ABYSS_OK;
+		case BUFFER_ERR:
+			return ABYSS_ERR;
+		case BUFFER_OK:
+		{
+			if(this->response.resource_fd != -1)
+			{
+				struct stat st;
+				fstat(this->response.resource_fd, &st);
+				while(1)
+				{
+					ssize_t len = sendfile(this->fd, this->response.resource_fd, NULL, st.st_size);
+					if(len == -1)
+						return (errno == EAGAIN || errno == EWOULDBLOCK) ? ABYSS_OK : ABYSS_ERR;
+					else if(len == 0)
+					{
+						close(this->response.resource_fd);
+						reset_tcp_cork(this->fd);
+						break;
+					}
+				}
+			}
+
+			if(this->response.status_code >= 300)
+				return ABYSS_ERR;
+
+			this->disable_out();
+			this->enable_in();
+			this->recv_buffer_length = 0;
+			return ABYSS_OK;
+		}
+		default:
+		{
+			ABYSS_ERR_MSG("invalid send status");
+			exit(ABYSS_ERR);
+		}
+	}
+
 }
 
 #define PARSE_ERR (-1)

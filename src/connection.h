@@ -64,12 +64,18 @@ public:
 	char recv_buffer[BUFFER_SIZE];
 	int recv_buffer_length;
 	int send_buffer_length;
+
 	struct parse_status
 	{
 		char* section_begin;
 		char* current;
 		Parse_Stage stage;
 	};
+
+	struct send_status
+	{
+		char* send_begin;
+	}
 
 	Connection() : EventData()
 	{
