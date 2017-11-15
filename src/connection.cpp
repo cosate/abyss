@@ -2,6 +2,7 @@
 #include<time.h>
 #include<sys/socket.h>
 #include<sys/epoll.h>
+#include<sys/stat.h>
 #include<stdlib.h>
 #include<sys/sendfile.h>
 #include<sys/types.h>
@@ -18,12 +19,16 @@
 #include"util.h"
 #include"message.h"
 
-extern vector<EventData*> connections;
+#define PARSE_ERR (-1)
+#define PARSE_OK (0)
+#define PARSE_AGAIN (1)
+
+extern vector<ConnectionData*> connections;
 extern int epfd;
 
 bool cmp(EventData* c1, EventData* c2)
 {
-	return c1->active_time > c2->active_time;
+	return ((ConnectionData*)c1)->active_time > ((ConnectionData*)c2)->active_time;
 }
 
 int EventData::in_handler()
@@ -54,7 +59,7 @@ int ListenData::in_handler()
 			close(connfd);
 			continue;
 		}
-		EventData* c = new ConnectionData(connfd);
+		ConnectionData* c = new ConnectionData(connfd);
 		
 		epoll_event connev;
 		connev.events = EPOLLIN;
@@ -81,16 +86,16 @@ int ListenData::in_handler()
 
 void ConnectionData::construct()
 {
-	this->request = Request();
-	this->response = Response();
-	memset(this->send_buffer, 0, BUFFER_SIZE);
-	memset(this->recv_buffer, 0, BUFFER_SIZE);
-	this->recv_buffer_length = 0;
-	this->send_buffer_length = 0;
-	this->parse_status.section_begin = recv_buffer;
-	this->parse_status.current = recv_buffer;
-	this->parse_status.stage = Parse_Stage::PARSE_REQUEST_LINE;
-	this->send_status.send_begin = send_buffer;
+	request = Request();
+	response = Response();
+	memset(send_buffer, 0, BUFFER_SIZE);
+	memset(recv_buffer, 0, BUFFER_SIZE);
+	recv_buffer_length = 0;
+	send_buffer_length = 0;
+	parse_status.section_begin = recv_buffer;
+	parse_status.current = recv_buffer;
+	parse_status.stage = Parse_Stage::PARSE_REQUEST_LINE;
+	send_status.send_begin = send_buffer;
 }
 
 int ConnectionData::enable_in()
@@ -187,7 +192,7 @@ int ConnectionData::recv_request()
 		else
 		{
 			this->recv_buffer_length += bytes;
-			if(BUFFER_SIZE == c->recv_buffer_length)
+			if(BUFFER_SIZE == this->recv_buffer_length)
 				return BUFFER_AGAIN;
 		}
 	}
@@ -199,7 +204,7 @@ int ConnectionData::send_response()
 	{
 		ssize_t len = send(this->fd, this->send_status.send_begin, this->send_buffer_length - (this->send_status.send_begin - this->send_buffer), 0);
 		if(len == -1)
-			return (errno == EAGAIN || errno == EWOULDBBLOCK) ? BUFFER_AGAIN : BUFFER_ERR;
+			return (errno == EAGAIN || errno == EWOULDBLOCK) ? BUFFER_AGAIN : BUFFER_ERR;
 		this->send_status.send_begin += len;
 	}
 
@@ -284,10 +289,6 @@ int ConnectionData::out_handler()
 
 }
 
-#define PARSE_ERR (-1)
-#define PARSE_OK (0)
-#define PARSE_AGAIN (1)
-
 int ConnectionData::parse_line()
 {
 	while(this->parse_status.current < this->recv_buffer + recv_buffer_length)
@@ -317,7 +318,7 @@ int ConnectionData::parse_line()
 				this->response.status_code = 400;
 				return PARSE_ERR;
 			}
-			else if(this->parse_status.stage == PARSE_HEADER)
+			else if(this->parse_status.stage == Parse_Stage::PARSE_HEADER)
 			{
 				if(this->parse_status.current + 1 < this->recv_buffer + this->recv_buffer_length)
 				{
@@ -345,14 +346,14 @@ int ConnectionData::parse_request_line()
 {
 	if(this->parse_status.stage != Parse_Stage::PARSE_REQUEST_LINE)
 		return PARSE_ERR;
-	this->parse_status.stage = PARSE_METHOD;
+	this->parse_status.stage = Parse_Stage::PARSE_METHOD;
 	this->response.status_code = 400;
 	this->pass_whitespace();
-	for(char* p == this->parse_status.section_begin; p < this->parse_status.current; p++)
+	for(char* p = this->parse_status.section_begin; p < this->parse_status.current; p++)
 	{
-		if(*p == ' ' || *p = '\r')
+		if(*p == ' ' || *p == '\r')
 		{
-			switch(this->parse_status)
+			switch(this->parse_status.stage)
 			{
 				case Parse_Stage::PARSE_METHOD:
 				{
@@ -405,7 +406,7 @@ void ConnectionData::pass_whitespace()
 {
 	while(this->parse_status.section_begin < this->parse_status.current)
 	{
-		if(this->parse_status.section_begin == ' ' || this->parse_status.section_begin == '\t')
+		if(*(this->parse_status.section_begin) == ' ' || *(this->parse_status.section_begin) == '\t')
 			this->parse_status.section_begin++;
 		else
 			break;
@@ -798,7 +799,7 @@ int ConnectionData::parse_http_version(char* end)
 	for(; p < end && *p != '.'; p++)
 	{
 		if(isdigit(*p))
-			this->request.http_version.major = this->request.http_version.major * 10 + (*p) - '0';
+			this->request.http_version.major_version = this->request.http_version.major_version * 10 + (*p) - '0';
 		else
 			return PARSE_ERR;
 	}
@@ -809,12 +810,12 @@ int ConnectionData::parse_http_version(char* end)
 	for(p += 1; p < end; p++)
 	{
 		if(isdigit(*p))
-			this->request.http_version.minor = this->request.http_version.minor * 10 + (*p) - '0';
+			this->request.http_version.minor_version = this->request.http_version.minor_version * 10 + (*p) - '0';
 		else
 			return PARSE_ERR;
 	}
 
-	if(this->request.http_version.major != 1 || (this->request.http_version.minor != 0 && this->request.http_version.minor != 1))
+	if(this->request.http_version.major_version != 1 || (this->request.http_version.minor_version != 0 && this->request.http_version.minor_version != 1))
 	{
 		this->response.status_code = 505;
 		return PARSE_ERR;
@@ -826,14 +827,14 @@ int ConnectionData::parse_http_version(char* end)
 	return PARSE_OK;
 }
 
-int parse_header()
+int ConnectionData::parse_header()
 {
 	if(this->parse_status.stage != Parse_Stage::PARSE_HEADER)
 		return PARSE_ERR;
 
-	if(this->parse_status.current - this->parse_status == 2)
+	if(this->parse_status.current - this->parse_status.section_begin == 2)
 	{
-		if(this->request.http_version.major == 1 && this->request.http_version.minor == 1 && this->request.header.host.len == 0)
+		if(this->request.http_version.major_version == 1 && this->request.http_version.minor_version == 1 && this->request.header.host.len == 0)
 		{
 			this->response.status_code = 400;
 			return PARSE_ERR;
@@ -857,7 +858,7 @@ int parse_header()
 				{
 					case ':':
 					{
-						name.str = this->section_begin;
+						name.str = this->parse_status.section_begin;
 						name.len = p - this->parse_status.section_begin;
 						this->parse_status.stage = Parse_Stage::PARSE_HEADER_VALUE;
 						this->parse_status.section_begin = p + 1;
@@ -912,7 +913,7 @@ int parse_header()
 	return PARSE_OK;
 }
 
-int parse_body()
+int ConnectionData::parse_body()
 {
 	if(this->parse_status.stage != Parse_Stage::PARSE_BODY)
 		return PARSE_ERR;
@@ -961,10 +962,10 @@ int parse_body()
 
 void ConnectionData::build_response_status_line()
 {
-	this->response.http_version.major = this->request.http_version.major;
-	this->response.http_version.minor = this->request.http_version.minor;
+	this->response.http_version.major_version = this->request.http_version.major_version;
+	this->response.http_version.minor_version = this->request.http_version.minor_version;
 
-	int n = sprintf(this->send_buffer, "HTTP/%d.%d", this->response.http_version.major, this->response.http_version.minor);
+	int n = sprintf(this->send_buffer, "HTTP/%d.%d", this->response.http_version.major_version, this->response.http_version.minor_version);
 	this->send_buffer_length += n;
 
 	this->response.code_description = this->code2description[this->response.status_code];

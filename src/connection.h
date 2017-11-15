@@ -65,24 +65,24 @@ public:
 	int recv_buffer_length;
 	int send_buffer_length;
 
-	struct parse_status
+	struct ParseStatus
 	{
 		char* section_begin;
 		char* current;
 		Parse_Stage stage;
-	};
+	}parse_status;
 
-	struct send_status
+	struct SendStatus
 	{
 		char* send_begin;
-	}
+	}send_status;
 
-	Connection() : EventData()
+	ConnectionData() : EventData()
 	{
 		construct();
 	}
 
-	Connection(int f) : EventData(f)
+	ConnectionData(int f) : EventData(f)
 	{
 		construct();
 	}
@@ -103,17 +103,17 @@ private:
 	int parse_request();
 
 	void pass_whitespace();
-	bool is_valid_scheme_char();
-	bool is_valid_host_char();
-	bool is_valid_path_char();
-	bool is_valid_query_char();
+	bool is_valid_scheme_char(char);
+	bool is_valid_host_char(char);
+	bool is_valid_path_char(char);
+	bool is_valid_query_char(char);
 
 	int parse_line();
 	
 	int parse_request_line();
-	int parse_method();
-	int parse_url();
-	int parse_http_version();
+	int parse_method(char*);
+	int parse_url(char*);
+	int parse_http_version(char*);
 
 	int parse_header();
 	int parse_body();

@@ -4,7 +4,7 @@
 using namespace std;
 
 map<string, size_t> RequestHeader::field2position = map<string, size_t>();
-static RequestHeader::init_field_position()
+void RequestHeader::init_field_position()
 {
 	/* general headers */
     field2position["connection"] = offsetof(RequestHeader, connection)

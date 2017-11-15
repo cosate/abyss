@@ -1,11 +1,14 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<unistd.h>
 #include<string>
+#include<fcntl.h>
 #include<sys/stat.h>
 #include<sys/types.h>
 #include<cstring>
 #include<string>
 #include<errno.h>
+
 #include"json.h"
 #include"config.h"
 #include"util.h"
@@ -15,13 +18,13 @@ using namespace std;
 
 int load_config(Config& config, const char* filename)
 {
-	int fd = open(filename, O_RDONLY)
+	int fd = open(filename, O_RDONLY);
 	if(fd == -1)
 	{
 		ABYSS_ERR_MSG(strerror(errno));
 		return ABYSS_ERR;
 	}
-	stat buf;
+	struct stat buf;
 	int ret = fstat(fd, &buf);
 	if(ret == -1)
 	{
@@ -40,7 +43,7 @@ int load_config(Config& config, const char* filename)
 	cfg[buf.st_size] = '\0';
 	JsonValue cfg_json;
 	loads(cfg_json, string(cfg));
-	if(cfg_json.JSONType != Type::JSON_OBJECT)
+	if(cfg_json.JSONType() != Type::JSON_OBJECT)
 	{
 		ABYSS_ERR_MSG("json file load failed");
 		return ABYSS_ERR;
@@ -87,15 +90,15 @@ int load_config(Config& config, const char* filename)
 		ABYSS_ERR_MSG("Not sepcified src_root or wrong type");
 		return ABYSS_ERR;
 	}
-	config.src_root = open(cfg_json["port"].getString(), O_RDONLY);
+	config.src_root = open(cfg_json["port"].getString().c_str(), O_RDONLY);
 	if(config.src_root < 0)
 	{
 		ABYSS_ERR_MSG(strerror(errno));
 		return ABYSS_ERR;
 	}
-	stat st;
+	struct stat st;
 	fstat(config.src_root, &st);
-	if(!IS_DIR(st.st_mode))
+	if(!S_ISDIR(st.st_mode))
 	{
 		ABYSS_ERR_MSG("src_root not directory");
 		return ABYSS_ERR;
@@ -106,14 +109,14 @@ int load_config(Config& config, const char* filename)
 		ABYSS_ERR_MSG("Not sepcified err_root or wrong type");
 		return ABYSS_ERR;
 	}
-	config.err_root = open(cfg_json["err_root"].getString(), O_RDONLY);
+	config.err_root = open(cfg_json["err_root"].getString().c_str(), O_RDONLY);
 	if(config.err_root < 0)
 	{
 		ABYSS_ERR_MSG(strerror(errno));
 		return ABYSS_ERR;
 	}
 	fstat(config.err_root, &st);
-	if(!IS_DIR(st.st_mode))
+	if(!S_ISDIR(st.st_mode))
 	{
 		ABYSS_ERR_MSG("err_root not directory");
 		return ABYSS_ERR;

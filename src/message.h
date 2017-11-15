@@ -32,10 +32,10 @@ public:
 class Version
 {
 public:
-	int major;
-	int minor;
-	Version() : major(0), minor(0) {}
-	Version(int maj, int min) : major(maj), minor(min){}
+	int major_version;
+	int minor_version;
+	Version() : major_version(0), minor_version(0) {}
+	Version(int maj, int mino) : major_version(maj), minor_version(mino){}
 };
 
 class RequestHeader
@@ -98,58 +98,58 @@ public:
     Str upgrade_insecure_requests;
     RequestHeader()
     {
-    	connection = Str()
-	    date = Str()
-	    mime_version = Str()
-	    trailer = Str()
-	    transfer_encoding = Str()
-	    update = Str()
-	    via = Str()
-	    cache_control = Str()
-	    pragma = Str()
+    	connection = Str();
+	    date = Str();
+	    mime_version = Str();
+	    trailer = Str();
+	    transfer_encoding = Str();
+	    update = Str();
+	    via = Str();
+	    cache_control = Str();
+	    pragma = Str();
 	    /* request headers */
-	    client_ip = Str()
-	    from = Str()
-	    host = Str()
-	    referer = Str()
-	    ua_color = Str()
-	    ua_cpu = Str()
-	    ua_disp = Str()
-	    ua_os = Str()
-	    ua_pixels = Str()
-	    user_agent = Str()
-	    accept = Str()
-	    accept_charset = Str()
-	    accept_encoding = Str()
-	    accept_language = Str()
-	    te = Str()
-	    expect = Str()
-	    if_match = Str()
-	    if_modified_since = Str()
-	    if_none_match = Str()
-	    if_range = Str()
-	    if_unmodified_since = Str()
-	    range = Str()
-	    authorization = Str()
-	    cookie = Str()
-	    cookie2 = Str()
-	    max_forward = Str()
-	    proxy_authorization = Str()
-	    proxy_connection = Str()
+	    client_ip = Str();
+	    from = Str();
+	    host = Str();
+	    referer = Str();
+	    ua_color = Str();
+	    ua_cpu = Str();
+	    ua_disp = Str();
+	    ua_os = Str();
+	    ua_pixels = Str();
+	    user_agent = Str();
+	    accept = Str();
+	    accept_charset = Str();
+	    accept_encoding = Str();
+	    accept_language = Str();
+	    te = Str();
+	    expect = Str();
+	    if_match = Str();
+	    if_modified_since = Str();
+	    if_none_match = Str();
+	    if_range = Str();
+	    if_unmodified_since = Str();
+	    range = Str();
+	    authorization = Str();
+	    cookie = Str();
+	    cookie2 = Str();
+	    max_forward = Str();
+	    proxy_authorization = Str();
+	    proxy_connection = Str();
 	    /* entity headers */
-	    allow = Str()
-	    location = Str()
-	    content_base = Str()
-	    content_encoding = Str()
-	    content_language = Str()
-	    content_length = Str()
-	    content_location = Str()
-	    content_md5 = Str()
-	    content_range = Str()
-	    content_type = Str()
-	    etag = Str()
-	    expires = Str()
-	    last_modified = Str()
+	    allow = Str();
+	    location = Str();
+	    content_base = Str();
+	    content_encoding = Str();
+	    content_language = Str();
+	    content_length = Str();
+	    content_location = Str();
+	    content_md5 = Str();
+	    content_range = Str();
+	    content_type = Str();
+	    etag = Str();
+	    expires = Str();
+	    last_modified = Str();
 	    upgrade_insecure_requests = Str();
     }
 
@@ -169,7 +169,7 @@ public:
 	{
 		method = Method::GET;
 		url = Url();
-		version = Version();
+		http_version = Version();
 		body = Str();
 		header = RequestHeader();
 	}
@@ -186,7 +186,7 @@ public:
 	int resource_fd;
 	Response()
 	{
-		version = Version();
+		http_version = Version();
 		status_code = 200;
 		code_description = "200 OK";
 		//body = Str();

@@ -18,7 +18,7 @@
 
 using namespace std;
 
-vector<EventData*> connections;
+vector<ConnectionData*> connections;
 Config server_config;
 int epfd;
 
@@ -27,6 +27,9 @@ void server_init()
 	load_config(config, "config.json");
 	make_heap(connections.begin(), connections.end(), cmp);
 	epfd = epoll_create1(0);
+	RequestHeader::init_field_position();
+	Response::init_code_description();
+	Response::init_mime();
 }
 
 
