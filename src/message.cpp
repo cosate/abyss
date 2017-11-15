@@ -1,4 +1,8 @@
+#include<stddef.h>
+
 #include<map>
+#include<iostream>
+
 #include"message.h"
 
 using namespace std;
@@ -7,58 +11,59 @@ map<string, size_t> RequestHeader::field2position = map<string, size_t>();
 void RequestHeader::init_field_position()
 {
 	/* general headers */
-    field2position["connection"] = offsetof(RequestHeader, connection)
-    field2position["date"] = offsetof(RequestHeader, date)
-    field2position["mime_version"] = offsetof(RequestHeader, mime_version)
-    field2position["trailer"] = offsetof(RequestHeader, trailer)
-    field2position["transfer_encoding"] = offsetof(RequestHeader, transfer_encoding)
-    field2position["update"] = offsetof(RequestHeader, update)
-    field2position["via"] = offsetof(RequestHeader, via)
-    field2position["cache_control"] = offsetof(RequestHeader, cache_control)
-    field2position["pragma"] = offsetof(RequestHeader, pragma)
+    field2position["connection"] = offsetof(RequestHeader, connection);
+    field2position["date"] = offsetof(RequestHeader, date);
+    field2position["mime_version"] = offsetof(RequestHeader, mime_version);
+    field2position["trailer"] = offsetof(RequestHeader, trailer);
+    field2position["transfer_encoding"] = offsetof(RequestHeader, transfer_encoding);
+    field2position["update"] = offsetof(RequestHeader, update);
+    field2position["via"] = offsetof(RequestHeader, via);
+    field2position["cache_control"] = offsetof(RequestHeader, cache_control);
+    field2position["pragma"] = offsetof(RequestHeader, pragma);
     /* request headers */
-    field2position["client_ip"] = offsetof(RequestHeader, client_ip)
-    field2position["from"] = offsetof(RequestHeader, from)
-    field2position["host"] = offsetof(RequestHeader, host)
-    field2position["referer"] = offsetof(RequestHeader, referer)
-    field2position["ua_color"] = offsetof(RequestHeader, ua_color)
-    field2position["ua_cpu"] = offsetof(RequestHeader, ua_cpu)
-    field2position["ua_disp"] = offsetof(RequestHeader, ua_disp)
-    field2position["ua_os"] = offsetof(RequestHeader, ua_os)
-    field2position["ua_pixels"] = offsetof(RequestHeader, ua_pixels)
-    field2position["user_agent"] = offsetof(RequestHeader, user_agent)
-    field2position["accept"] = offsetof(RequestHeader, accept)
-    field2position["accept_charset"] = offsetof(RequestHeader, accept_charset)
-    field2position["accept_encoding"] = offsetof(RequestHeader, accept_encoding)
-    field2position["accept_language"] = offsetof(RequestHeader, accept_language)
-    field2position["te"] = offsetof(RequestHeader, te)
-    field2position["expect"] = offsetof(RequestHeader, expect)
-    field2position["if_match"] = offsetof(RequestHeader, if_match)
-    field2position["if_modified_since"] = offsetof(RequestHeader, if_modified_since)
-    field2position["if_none_match"] = offsetof(RequestHeader, if_none_match)
-    field2position["if_range"] = offsetof(RequestHeader, if_range)
-    field2position["if_unmodified_since"] = offsetof(RequestHeader, if_unmodified_since)
-    field2position["range"] = offsetof(RequestHeader, range)
-    field2position["authorization"] = offsetof(RequestHeader, authorization)
-    field2position["cookie"] = offsetof(RequestHeader, cookie)
-    field2position["cookie2"] = offsetof(RequestHeader, cookie2)
-    field2position["max_forward"] = offsetof(RequestHeader, max_forward)
-    field2position["proxy_authorization"] = offsetof(RequestHeader, proxy_authorization)
-    field2position["proxy_connection"] = offsetof(RequestHeader, proxy_connection)
+    field2position["client_ip"] = offsetof(RequestHeader, client_ip);
+    field2position["from"] = offsetof(RequestHeader, from);
+    field2position["host"] = offsetof(RequestHeader, host);
+    field2position["referer"] = offsetof(RequestHeader, referer);
+    field2position["ua_color"] = offsetof(RequestHeader, ua_color);
+    field2position["ua_cpu"] = offsetof(RequestHeader, ua_cpu);
+    field2position["ua_disp"] = offsetof(RequestHeader, ua_disp);
+    field2position["ua_os"] = offsetof(RequestHeader, ua_os);
+    field2position["ua_pixels"] = offsetof(RequestHeader, ua_pixels);
+    field2position["user_agent"] = offsetof(RequestHeader, user_agent);
+    field2position["accept"] = offsetof(RequestHeader, accept);
+    field2position["accept_charset"] = offsetof(RequestHeader, accept_charset);
+    field2position["accept_encoding"] = offsetof(RequestHeader, accept_encoding);
+    field2position["accept_language"] = offsetof(RequestHeader, accept_language);
+    field2position["te"] = offsetof(RequestHeader, te);
+    field2position["expect"] = offsetof(RequestHeader, expect);
+    field2position["if_match"] = offsetof(RequestHeader, if_match);
+    field2position["if_modified_since"] = offsetof(RequestHeader, if_modified_since);
+    field2position["if_none_match"] = offsetof(RequestHeader, if_none_match);
+    field2position["if_range"] = offsetof(RequestHeader, if_range);
+    field2position["if_unmodified_since"] = offsetof(RequestHeader, if_unmodified_since);
+    field2position["range"] = offsetof(RequestHeader, range);
+    field2position["authorization"] = offsetof(RequestHeader, authorization);
+    field2position["cookie"] = offsetof(RequestHeader, cookie);
+    field2position["cookie2"] = offsetof(RequestHeader, cookie2);
+    field2position["max_forward"] = offsetof(RequestHeader, max_forward);
+    field2position["proxy_authorization"] = offsetof(RequestHeader, proxy_authorization);
+    field2position["proxy_connection"] = offsetof(RequestHeader, proxy_connection);
     /* entity headers */
-    field2position["allow"] = offsetof(RequestHeader, allow)
-    field2position["location"] = offsetof(RequestHeader, location)
-    field2position["content_base"] = offsetof(RequestHeader, content_base)
-    field2position["content_encoding"] = offsetof(RequestHeader, content_encoding)
-    field2position["content_language"] = offsetof(RequestHeader, content_language)
-    field2position["content_length"] = offsetof(RequestHeader, content_length)
-    field2position["content_location"] = offsetof(RequestHeader, content_location)
-    field2position["content_md5"] = offsetof(RequestHeader, content_md5)
-    field2position["content_range"] = offsetof(RequestHeader, content_range)
-    field2position["content_type"] = offsetof(RequestHeader, content_type)
-    field2position["etag"] = offsetof(RequestHeader, etag)
-    field2position["expires"] = offsetof(RequestHeader, expires)
-    field2position["last_modified"] = offsetof(RequestHeader, last_modified)
+    field2position["allow"] = offsetof(RequestHeader, allow);
+    field2position["location"] = offsetof(RequestHeader, location);
+    field2position["content_base"] = offsetof(RequestHeader, content_base);
+    field2position["content_encoding"] = offsetof(RequestHeader, content_encoding);
+    field2position["content_language"] = offsetof(RequestHeader, content_language);
+    field2position["content_length"] = offsetof(RequestHeader, content_length);
+    field2position["content_location"] = offsetof(RequestHeader, content_location);
+    field2position["content_md5"] = offsetof(RequestHeader, content_md5);
+    field2position["content_range"] = offsetof(RequestHeader, content_range);
+    field2position["content_type"] = offsetof(RequestHeader, content_type);
+    field2position["etag"] = offsetof(RequestHeader, etag);
+    field2position["expires"] = offsetof(RequestHeader, expires);
+    field2position["last_modified"] = offsetof(RequestHeader, last_modified);
+    field2position["upgrade_insecure_requests"] = offsetof(RequestHeader, upgrade_insecure_requests);
 }
 
 map<int, string> Response:: code2description = map<int, string>();
@@ -106,7 +111,7 @@ void Response::init_code_description()
 	code2description[505] = "505 HTTP Version Not Supported";
 }
 
-map<Str, string> Response::mime = map<string, string>();
+map<string, string> Response::mime = map<string, string>();
 void Response::init_mime()
 {
 	mime["htm"] = "text/html";
@@ -121,4 +126,13 @@ void Response::init_mime()
 	mime["ico"] = "image/x-icon";
 
 	mime["pdf"] = "application/pdf";
+}
+
+void Request::print()
+{
+    cout<<(int)method<<"   "<<endl;
+    for(int i = 0; i < url.path.len; i++)
+        cout<<*((url.path.str) + i);
+    cout<<endl;
+    cout<<http_version.major_version<<"."<<http_version.minor_version<<endl;
 }

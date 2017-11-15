@@ -173,6 +173,7 @@ public:
 		body = Str();
 		header = RequestHeader();
 	}
+	void print();
 };
 
 class Response

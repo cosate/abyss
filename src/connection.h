@@ -7,7 +7,7 @@
 
 #define BUFFER_SIZE (4096)
 #define MAX_CONNECTIONS (10000)
-#define MAX_EVENTs (10000)
+#define MAX_EVENTS (10000)
 
 class EventData
 {

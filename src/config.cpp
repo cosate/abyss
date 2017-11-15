@@ -90,7 +90,7 @@ int load_config(Config& config, const char* filename)
 		ABYSS_ERR_MSG("Not sepcified src_root or wrong type");
 		return ABYSS_ERR;
 	}
-	config.src_root = open(cfg_json["port"].getString().c_str(), O_RDONLY);
+	config.src_root = open(cfg_json["src_root"].getString().c_str(), O_RDONLY);
 	if(config.src_root < 0)
 	{
 		ABYSS_ERR_MSG(strerror(errno));

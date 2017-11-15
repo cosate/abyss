@@ -109,7 +109,7 @@ int ConnectionData::enable_in()
 
 		epoll_event ev;
 		ev.events = this->events;
-		ev.data.ptr = (EventData*)this;
+		ev.data.ptr = this;
 		if(epoll_ctl(epfd, EPOLL_CTL_MOD, this->fd, &ev) == -1)
 		{
 			ABYSS_ERR_MSG(strerror(errno));
@@ -127,7 +127,7 @@ int ConnectionData::disable_in()
 
 		epoll_event ev;
 		ev.events = this->events;
-		ev.data.ptr = (EventData*)this;
+		ev.data.ptr = this;
 		if(epoll_ctl(epfd, EPOLL_CTL_MOD, this->fd, &ev) == -1)
 		{
 			ABYSS_ERR_MSG(strerror(errno));
@@ -145,7 +145,7 @@ int ConnectionData::enable_out()
 
 		epoll_event ev;
 		ev.events = this->events;
-		ev.data.ptr = (EventData*)this;
+		ev.data.ptr = this;
 		if(epoll_ctl(epfd, EPOLL_CTL_MOD, this->fd, &ev) == -1)
 		{
 			ABYSS_ERR_MSG(strerror(errno));
@@ -163,7 +163,7 @@ int ConnectionData::disable_out()
 
 		epoll_event ev;
 		ev.events = this->events;
-		ev.data.ptr = (EventData*)this;
+		ev.data.ptr = this;
 		if(epoll_ctl(epfd, EPOLL_CTL_MOD, this->fd, &ev) == -1)
 		{
 			ABYSS_ERR_MSG(strerror(errno));
@@ -529,7 +529,7 @@ bool ConnectionData::is_valid_host_char(char ch)
 }
 
 /*TODO: %*/
-bool is_valid_path_char(char ch)
+bool ConnectionData::is_valid_path_char(char ch)
 {
 	switch(ch)
 	{
@@ -801,6 +801,7 @@ int ConnectionData::parse_http_version(char* end)
 	char* p = this->parse_status.section_begin;
 	for(; p < end && *p != '.'; p++)
 	{
+		cout<<*p<<endl;
 		if(isdigit(*p))
 			this->request.http_version.major_version = this->request.http_version.major_version * 10 + (*p) - '0';
 		else
@@ -812,6 +813,7 @@ int ConnectionData::parse_http_version(char* end)
 
 	for(p += 1; p < end; p++)
 	{
+		cout<<*p<<endl;
 		if(isdigit(*p))
 			this->request.http_version.minor_version = this->request.http_version.minor_version * 10 + (*p) - '0';
 		else
@@ -968,7 +970,7 @@ void ConnectionData::build_response_status_line()
 	this->response.http_version.major_version = this->request.http_version.major_version;
 	this->response.http_version.minor_version = this->request.http_version.minor_version;
 
-	int n = sprintf(this->send_buffer, "HTTP/%d.%d", this->response.http_version.major_version, this->response.http_version.minor_version);
+	int n = sprintf(this->send_buffer, "HTTP/%d.%d ", this->response.http_version.major_version, this->response.http_version.minor_version);
 	this->send_buffer_length += n;
 
 	this->response.code_description = this->response.code2description[this->response.status_code];

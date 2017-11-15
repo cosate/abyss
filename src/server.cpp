@@ -7,6 +7,7 @@
 #include<sys/types.h>
 #include<sys/time.h>
 #include<sys/epoll.h>
+#include<cstring>
 
 #include<vector>
 #include<algorithm>
@@ -15,6 +16,7 @@
 #include"net.h"
 #include"config.h"
 #include"connection.h"
+#include"util.h"
 
 using namespace std;
 
@@ -24,7 +26,7 @@ int epfd;
 
 void server_init()
 {
-	load_config(config, "config.json");
+	load_config(server_config, "config.json");
 	make_heap(connections.begin(), connections.end(), cmp);
 	epfd = epoll_create1(0);
 	RequestHeader::init_field_position();
@@ -37,7 +39,7 @@ int main(int argc, char* argv[])
 {
 	server_init();
 	
-	int listen_fd = creat_listen_socket(NULL, config.port, 1024);
+	int listen_fd = create_listen_socket(NULL, server_config.port, 1024);
 	if(listen_fd == ABYSS_ERR)
 	{
 		ABYSS_ERR_MSG(strerror(errno));
@@ -62,7 +64,7 @@ int main(int argc, char* argv[])
 		int nfds = epoll_wait(epfd, res, MAX_EVENTS, 500);
 		for(int i = 0; i < nfds; i++)
 		{
-			EventData* p = res[i].data.ptr;
+			EventData* p = (EventData*)(res[i].data.ptr);
 			if(p->fd == listen_fd)
 			{
 				p->in_handler();
@@ -71,11 +73,13 @@ int main(int argc, char* argv[])
 			{
 				if(res[i].events & EPOLLIN)
 				{
-					if(p->in_handler() == ABYSS_ERR)
+					if(((ConnectionData*)p)->in_handler() == ABYSS_ERR)
 					{
-						if(p->fd != -1)
-							close(p->fd);
-						p->active_time = 0;
+						cout<<((ConnectionData*)p)->recv_buffer<<endl;
+						((ConnectionData*)p)->request.print();
+						if(((ConnectionData*)p)->fd != -1)
+							close(((ConnectionData*)p)->fd);
+						((ConnectionData*)p)->active_time = 0;
 						make_heap(connections.begin(), connections.end(), cmp);
 						pop_heap(connections.begin(), connections.end(), cmp);
 						connections.pop_back();
@@ -84,17 +88,19 @@ int main(int argc, char* argv[])
 					}
 					else
 					{
-						p->active_time = time(NULL);
+						cout<<((ConnectionData*)p)->recv_buffer<<endl;
+						((ConnectionData*)p)->request.print();
+						((ConnectionData*)p)->active_time = time(NULL);
 						make_heap(connections.begin(), connections.end(), cmp);
 					}
 				}
 				if(res[i].events & EPOLLOUT)
 				{
-					if(p->out_handler() == ABYSS_ERR)
+					if(((ConnectionData*)p)->out_handler() == ABYSS_ERR)
 					{
-						if(p->fd != -1)
-							close(p->fd);
-						p->active_time = 0;
+						if(((ConnectionData*)p)->fd != -1)
+							close(((ConnectionData*)p)->fd);
+						((ConnectionData*)p)->active_time = 0;
 						make_heap(connections.begin(), connections.end(), cmp);
 						pop_heap(connections.begin(), connections.end(), cmp);
 						connections.pop_back();
@@ -103,7 +109,7 @@ int main(int argc, char* argv[])
 					}
 					else
 					{
-						p->active_time = time(NULL);
+						((ConnectionData*)p)->active_time = time(NULL);
 						make_heap(connections.begin(), connections.end(), cmp);
 					}
 				}

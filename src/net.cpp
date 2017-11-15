@@ -3,9 +3,9 @@
 #include<stdio.h>
 #include<errno.h>
 #include<sys/types.h>
-#include<sys/type.h>
 #include<netdb.h>
 #include<linux/tcp.h>
+#include<cstring>
 
 #include"net.h"
 #include"util.h"
@@ -44,7 +44,7 @@ int reset_tcp_cork(int fd)
 	if(setsockopt(fd, IPPROTO_TCP, TCP_CORK, &off, sizeof(off)) == -1)
 	{
 		ABYSS_ERR_MSG(strerror(errno));
-		return ABYSS_ERR
+		return ABYSS_ERR;
 	}
 	return ABYSS_OK;
 }
@@ -54,7 +54,7 @@ static int set_reuseport(int fd)
 	int on = 1;
 	if(setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) == -1)
 	{
-		ABYSS_ERR_MSG(strerr(errno));
+		ABYSS_ERR_MSG(strerror(errno));
 		return ABYSS_ERR;
 	}
 	return ABYSS_OK;
@@ -65,9 +65,10 @@ int create_listen_socket(const char* host, int port, int backlog)
 	int listen_fd;
 
 	char _port[6];
-	snprintf(_port, 6, ,"%d", port);
+	snprintf(_port, 6, "%d", port);
 
 	addrinfo hints, *results, *results_save;
+	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -80,9 +81,9 @@ int create_listen_socket(const char* host, int port, int backlog)
 	}
 	else
 	{
-		for(results_save = result; result != NULL; result = result->ai_next)
+		for(results_save = results; results != NULL; results = results->ai_next)
 		{
-			listen_fd = socket(result->ai_family, result->ai_socktype | SOCK_NONBLOCK, result->ai_protocol);
+			listen_fd = socket(results->ai_family, results->ai_socktype | SOCK_NONBLOCK, results->ai_protocol);
 			if(listen_fd == -1)
 				continue;
 
@@ -92,13 +93,13 @@ int create_listen_socket(const char* host, int port, int backlog)
 				continue;
 			}
 
-			if(bind(listen_fd, result->ai_addr, result->ai_addrlen) == -1)
+			if(bind(listen_fd, results->ai_addr, results->ai_addrlen) == -1)
 			{
 				close(listen_fd);
 				continue;
 			}
 
-			if(listen(listen, backlog) == -1)
+			if(listen(listen_fd, backlog) == -1)
 			{
 				close(listen_fd);
 				continue;
