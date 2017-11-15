@@ -5,6 +5,7 @@
 #include<sys/stat.h>
 #include<stdlib.h>
 #include<sys/sendfile.h>
+#include<fcntl.h>
 #include<sys/types.h>
 #include<errno.h>
 #include<cstring>
@@ -14,6 +15,7 @@
 #include<vector>
 #include<algorithm>
 
+#include"config.h"
 #include"connection.h"
 #include"net.h"
 #include"util.h"
@@ -25,6 +27,7 @@
 
 extern vector<ConnectionData*> connections;
 extern int epfd;
+extern Config server_config;
 
 bool cmp(EventData* c1, EventData* c2)
 {
@@ -846,8 +849,8 @@ int ConnectionData::parse_header()
 
 	this->response.status_code = 400;
 	this->parse_status.stage = Parse_Stage::PARSE_HEADER_NAME;
-	Str name();
-	Str value();
+	Str name = Str();
+	Str value = Str();
 	for(char* p = this->parse_status.section_begin; p < this->parse_status.current; p++)
 	{
 		switch(this->parse_status.stage)
@@ -873,7 +876,7 @@ int ConnectionData::parse_header()
 					default:
 					{
 						if(!isalnum(*p))
-							return Parse_Stage::PARSE_ERR;
+							return PARSE_ERR;
 						if('A' <= *p && 'Z' >= *p)
 							*p = *p - 'A' + 'a';
 						break;
@@ -904,7 +907,7 @@ int ConnectionData::parse_header()
 		}
 	}
 	this->response.status_code = 200;
-	Str* header = (Str*)(((char*)&(this->request.header)) + field2position[string(name.str, name.str + name.len)]);
+	Str* header = (Str*)(((char*)&(this->request.header)) + this->request.header.field2position[string(name.str, name.str + name.len)]);
 	header->str = value.str;
 	header->len = value.len;
 
@@ -954,7 +957,7 @@ int ConnectionData::parse_body()
 				this->response.status_code = 400;
 				return PARSE_ERR;
 			}
-			this->parse_status = PARSE_DONE;
+			this->parse_status.stage = Parse_Stage::PARSE_DONE;
 			return PARSE_OK;
 		}
 	}
@@ -968,8 +971,8 @@ void ConnectionData::build_response_status_line()
 	int n = sprintf(this->send_buffer, "HTTP/%d.%d", this->response.http_version.major_version, this->response.http_version.minor_version);
 	this->send_buffer_length += n;
 
-	this->response.code_description = this->code2description[this->response.status_code];
-	send_buffer_append(this->response.code_description)
+	this->response.code_description = this->response.code2description[this->response.status_code];
+	send_buffer_append(this->response.code_description);
 
 	send_buffer_append("\r\n");
 }
@@ -985,7 +988,7 @@ void ConnectionData::build_response_date()
 
 void ConnectionData::send_buffer_append(string s)
 {
-	memcpy(this->send_buffer + this->send_buffer_length, s);
+	memcpy(this->send_buffer + this->send_buffer_length, s.c_str(), s.length());
 	this->send_buffer_length += s.length();
 }
 
@@ -1030,8 +1033,8 @@ void ConnectionData::build_response_ok()
 	build_response_date();
 
 	send_buffer_append("Content-Type: ");
-	if(this->request.url.extension != NULL)
-		send_buffer_append(mime[string(this->request.url.extension.str, this->request.url.extension.str + this->request.url.extension.len)]);
+	if(this->request.url.extension.str != NULL)
+		send_buffer_append(this->response.mime[string(this->request.url.extension.str, this->request.url.extension.str + this->request.url.extension.len)]);
 	else
 		send_buffer_append("text/html");
 
@@ -1087,7 +1090,7 @@ void ConnectionData::build_response_err()
 
 int ConnectionData::parse_request()
 {
-	while(this->parse_status.stage != PARSE_BODY)
+	while(this->parse_status.stage != Parse_Stage::PARSE_BODY)
 	{
 		switch(parse_line())
 		{
@@ -1181,7 +1184,7 @@ int ConnectionData::handle_path()
 	else
 		path = string(this->request.url.path.str, this->request.url.path.str + this->request.url.path.len);
 
-	int fd = openat(server_config.src_root, path, O_RDONLY);
+	int fd = openat(server_config.src_root, path.c_str(), O_RDONLY);
 	if(fd == -1)
 	{
 		this->response.status_code = 404;

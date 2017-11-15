@@ -65,14 +65,14 @@ public:
 	int recv_buffer_length;
 	int send_buffer_length;
 
-	struct ParseStatus
+	struct Parse_Status
 	{
 		char* section_begin;
 		char* current;
 		Parse_Stage stage;
 	}parse_status;
 
-	struct SendStatus
+	struct Send_Status
 	{
 		char* send_begin;
 	}send_status;
@@ -114,6 +114,7 @@ private:
 	int parse_method(char*);
 	int parse_url(char*);
 	int parse_http_version(char*);
+	int handle_path();
 
 	int parse_header();
 	int parse_body();
