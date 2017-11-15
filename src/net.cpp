@@ -80,9 +80,9 @@ int create_listen_socket(const char* host, int port, int backlog)
 	}
 	else
 	{
-		for(results_save = res; res != NULL; res = res->ai_next)
+		for(results_save = result; result != NULL; result = result->ai_next)
 		{
-			listen_fd = socket(res->ai_family, res->ai_socktype | SOCK_NONBLOCK, res->ai_protocol);
+			listen_fd = socket(result->ai_family, result->ai_socktype | SOCK_NONBLOCK, result->ai_protocol);
 			if(listen_fd == -1)
 				continue;
 
@@ -92,7 +92,7 @@ int create_listen_socket(const char* host, int port, int backlog)
 				continue;
 			}
 
-			if(bind(listen_fd, res->ai_addr, res->ai_addrlen) == -1)
+			if(bind(listen_fd, result->ai_addr, result->ai_addrlen) == -1)
 			{
 				close(listen_fd);
 				continue;

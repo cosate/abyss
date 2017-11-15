@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 	if(listen_fd == ABYSS_ERR)
 	{
 		ABYSS_ERR_MSG(strerror(errno));
-		exit(-1);
+		exit(ABYSS_ERR);
 	}
 
 	EventData* listen_data = new ListenData(listen_fd);
