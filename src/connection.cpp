@@ -1181,7 +1181,7 @@ int ConnectionData::parse_request()
 int ConnectionData::handle_path()
 {
 	string path;
-	if(this->request.url.path.str == NULL && this->request.url.path.len == 0)
+	if(this->request.url.path.str == NULL || this->request.url.path.len == 0)
 		path = "./";
 	else
 		path = string(this->request.url.path.str, this->request.url.path.str + this->request.url.path.len);
