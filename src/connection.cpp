@@ -799,7 +799,7 @@ int ConnectionData::parse_http_version(char* end)
 		return PARSE_ERR;
 
 	char* p = this->parse_status.section_begin;
-	for(; p < end && *p != '.'; p++)
+	for(p += 5; p < end && *p != '.'; p++)
 	{
 		cout<<*p<<endl;
 		if(isdigit(*p))
