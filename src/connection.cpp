@@ -759,8 +759,8 @@ int ConnectionData::parse_url(char* end)
 		}
 		case Parse_Stage::PARSE_URL_PATH:
 		{
-			this->request.url.port.str = this->parse_status.section_begin;
-			this->request.url.port.len = end - this->parse_status.section_begin;
+			this->request.url.path.str = this->parse_status.section_begin;
+			this->request.url.path.len = end - this->parse_status.section_begin;
 			if(this->request.url.extension.str)
 				this->request.url.extension.len = end - this->request.url.extension.str;
 			break;

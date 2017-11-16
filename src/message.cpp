@@ -130,6 +130,7 @@ void Response::init_mime()
 
 void Request::print()
 {
+    cout<<"request message :"<<endl;
     cout<<(int)method<<"   "<<endl;
     for(int i = 0; i < url.path.len; i++)
         cout<<*((url.path.str) + i);
