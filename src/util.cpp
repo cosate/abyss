@@ -6,7 +6,7 @@
 
 void abyss_log(const char* fmt, ...)
 {
-	FILE *log_file = fopen("log/Abyss.log", "a+");
+	FILE *log_file = fopen("log/abyss.log", "a+");
 	if(!log_file)
 		return;
 

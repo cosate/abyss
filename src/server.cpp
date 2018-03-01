@@ -136,7 +136,7 @@ static void server_init()
 	set_sig_handler(SIGINT, sigint_handler);
 	set_sig_handler(SIGTERM, sigint_handler);
 	set_sig_handler(SIGHUP, sighup_handler);
-	struct rlimit nofile_limit = { 65535, 65535};
+	struct rlimit nofile_limit = { 65535, 65535 };
 	if(setrlimit(RLIMIT_NOFILE, &nofile_limit) == -1)
 	{
 		fprintf(stderr, "[EXIT in %s:%d] %s\n", __FILE__, __LINE__, strerror(errno));
